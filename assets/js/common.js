@@ -54,6 +54,22 @@
     try { document.execCommand('copy'); el.style.background = '#eaf7ea'; setTimeout(function () { el.style.background = ''; }, 600); } catch (e) {}
   };
 
+  // 复制按钮：[data-copy="文本"]，点击即复制（外链/直链等短链接）
+  document.addEventListener('click', function (e) {
+    var t = e.target;
+    while (t && t !== document) {
+      if (t.getAttribute && t.getAttribute('data-copy') !== null) {
+        e.preventDefault();
+        wcCopy(t.getAttribute('data-copy'));
+        var txt = t.innerHTML;
+        t.innerHTML = '已复制';
+        setTimeout(function () { t.innerHTML = txt; }, 900);
+        return;
+      }
+      t = t.parentNode;
+    }
+  });
+
   // 表单重复提交保护：提交后禁用按钮并显示处理中
   document.addEventListener('DOMContentLoaded', function () {
     var forms = document.querySelectorAll('form.frm');

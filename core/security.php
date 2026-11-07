@@ -29,18 +29,9 @@ function sec_headers()
     }
     $csp = sec_csp_mode();
     if ($csp === 'off') { return; }
-    $cdn = wc_setting('ui_cdn', 'local');
     $imgSrc = "self data: blob:";
     $scriptSrc = "'self' 'unsafe-inline'";
     $styleSrc = "'self' 'unsafe-inline'";
-    if ($cdn !== 'local') {
-        $host = parse_url(wc_setting('cdn_base', 'https://cdn.jsdelivr.net'), PHP_URL_HOST);
-        if ($host) {
-            $imgSrc .= ' https://' . $host;
-            $scriptSrc .= ' https://' . $host;
-            $styleSrc .= ' https://' . $host;
-        }
-    }
     if (wc_setting('qr_enable', '1') && wc_setting('qr_api', '') !== '') {
         $qh = parse_url(wc_setting('qr_api'), PHP_URL_HOST);
         if ($qh) { $imgSrc .= ' https://' . $qh; }
@@ -177,7 +168,7 @@ function sec_require_reauth($title = '该操作需要再次验证密码')
     if ($pw !== '') { $err = '密码不正确'; } else { $err = ''; }
     $back = isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '';
     echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>身份确认</title>'
-        . '<link rel="stylesheet" href="' . wc_e(wc_ui_css_url()) . '"></head><body class="' . wc_e(wc_ui_body_class()) . '">'
+        . '<link rel="stylesheet" href="' . wc_e(wc_css()) . '"></head><body>'
         . '<div class="secReauth"><h3>' . wc_e($title) . '</h3>'
         . ($err !== '' ? '<div class="secErr">' . wc_e($err) . '</div>' : '')
         . '<p>请输入当前账号（' . wc_e($u['email']) . '）的登录密码：</p>'

@@ -142,7 +142,6 @@ echo '<div class="clr"></div></div>';
 echo '<form method="post" action="' . wc_e(wc_url('api.php')) . '" id="batchForm">' . wc_csrf_field()
     . '<input type="hidden" name="do" value="batch">'
     . '<input type="hidden" name="back" value="' . wc_e('files.php?' . $qstr) . '">';
-echo wc_skeleton_rows(5, 5);
 
 /* ---------- 文件夹 ---------- */
 if ($folders) {
@@ -202,7 +201,6 @@ if (!$rows && !$folders) {
             . '<td align="center">' . (int)$f['down'] . '</td>'
             . '<td>' . wc_e(wc_human_time($f['add_time'])) . '</td>'
             . '<td class="ops">'
-            . '<a href="javascript:;" data-copy-links="' . (int)$f['id'] . '" title="复制直链（图片/视频/文档）"><i class="ic ic-copy"></i>直链</a> '
             . '<a href="' . wc_e(wc_url('files.php?act=share&id=' . (int)$f['id'] . '&fid=' . $fid . '&view=' . $view)) . '">分享</a> '
             . '<a href="' . wc_e(wc_url('files.php?act=rename&id=' . (int)$f['id'] . '&fid=' . $fid . '&view=' . $view)) . '">改名</a> '
             . '<a href="' . wc_e(wc_url('files.php?act=move&id=' . (int)$f['id'] . '&fid=' . $fid)) . '">移动</a> '
@@ -210,7 +208,7 @@ if (!$rows && !$folders) {
             . '<a href="' . wc_e(wc_url('files.php?act=note&id=' . (int)$f['id'] . '&fid=' . $fid)) . '">说明</a> '
             . '<a href="' . wc_e(wc_url('files.php?act=info&id=' . (int)$f['id'] . '&fid=' . $fid)) . '">详情</a> '
             . '<a href="' . wc_e(wc_url('api.php?do=download&id=' . (int)$f['id'])) . '">下载</a> '
-            . '<a href="' . wc_e(wc_api_url('del', array('id' => (int)$f['id'], 'back' => 'files.php?fid=' . $fid))) . '" data-confirm="放入回收站？">删除</a>'
+            . '<a href="' . wc_e(wc_api_url('del', array('id' => (int)$f['id'], 'back' => 'files.php?fid=' . $fid))) . '" onclick="return confirm(\'放入回收站？\')">删除</a>'
             . '</td></tr>';
     }
     echo '</table>';

@@ -4,7 +4,7 @@ require_once __DIR__ . '/common.php';
 wc_require_admin();
 
 $tab = wc_get('tab', 'site');
-if (!in_array($tab, array('site', 'upload', 'share', 'security', 'seo', 'avatar', 'ui', 'text'), true)) { $tab = 'site'; }
+if (!in_array($tab, array('site', 'upload', 'share', 'security', 'seo', 'avatar', 'text'), true)) { $tab = 'site'; }
 
 /** 字段定义：key => [标题, 类型, 说明, 默认值, (select 选项数组)] 类型 text/int/size/switch/area/select/ext/list/kindlist */
 $fields = wc_settings_fields();
@@ -64,7 +64,7 @@ if (wc_is_post() && wc_post('do') === 'save') {
 
 cp_header('站点设置', 'settings.php');
 
-$tabs = array('site' => '站点基本', 'upload' => '上传与类型', 'share' => '外链与下载', 'security' => '注册与安全', 'seo' => 'SEO 优化', 'avatar' => '头像服务', 'ui' => '界面与皮肤', 'text' => '文案与条款');
+$tabs = array('site' => '站点基本', 'upload' => '上传与类型', 'share' => '外链与下载', 'security' => '注册与安全', 'seo' => 'SEO 优化', 'avatar' => '头像服务', 'text' => '文案与条款');
 echo '<div class="cpFilter">';
 foreach ($tabs as $k => $v) {
     echo '<a href="' . wc_e(cp_url('settings.php', array('tab' => $k))) . '"' . ($tab === $k ? ' class="on"' : '') . ' style="margin-right:8px">' . $v . '</a> ';
@@ -222,15 +222,6 @@ function wc_settings_fields()
             'gravatar_official' => array('官方源地址', 'text', '镜像探测失败时的备用源，也是前端 onerror 的二级降级地址', 'https://www.gravatar.com'),
             'gravatar_timeout' => array('探测超时(秒)', 'int', '探测镜像是否在线的单次超时时间', '3'),
             'gravatar_cache' => array('探测结果缓存(秒)', 'int', '镜像在线时可较久；判定不可达时固定 30 秒后重试，便于镜像恢复', '600'),
-        ),
-        'ui' => array(
-            'ui_skin' => array('默认皮肤', 'select', 'mdui = Material Design 3 深色新版；classic = 2005 经典门户。访客可在页脚自行切换（cookie 覆盖）', 'mdui',
-                array('mdui' => 'mdui · Material3 深色新版', 'classic' => 'classic · 2005 经典')),
-            'ui_theme' => array('默认主题', 'select', '深色 / 浅色 / 跟随系统；访客可用顶栏按钮切换', 'dark',
-                array('dark' => '深色', 'light' => '浅色', 'auto' => '跟随系统')),
-            'ui_cdn' => array('mdui 资源来源', 'select', 'local = 使用 assets/vendor 内置文件（推荐，离线可用）；cdn = 走外部 CDN', 'local',
-                array('local' => '本地内置', 'cdn' => '外部 CDN')),
-            'cdn_base' => array('CDN 基地址', 'text', '仅 ui_cdn=cdn 时生效，如 https://cdn.jsdelivr.net/npm/mdui@2 或 https://unpkg.com/mdui@2', 'https://cdn.jsdelivr.net/npm/mdui@2'),
         ),
         'text' => array(
             'site_notice' => array('首页公告条', 'area', '纯文本，自动转义', ''),

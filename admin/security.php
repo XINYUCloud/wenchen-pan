@@ -89,7 +89,7 @@ echo '<p class="mini">轮换后：缩略图/头像签名、签名直链全部失
     . '<form method="post" action="' . wc_e(cp_url('security.php')) . '">' . wc_csrf_field()
     . '<input type="hidden" name="do" value="rotate">'
     . '<input type="password" name="reauth_pass" size="24" placeholder="当前管理员密码" required> '
-    . '<input type="submit" class="btn" value="立即轮换密钥" data-confirm="轮换会使所有旧签名链接失效，确定？"></form>';
+    . '<input type="submit" class="btn" value="立即轮换密钥" onclick="return confirm(\'轮换会使所有旧签名链接失效，确定？\')"></form>';
 cp_panel_end();
 
 cp_panel('当前生效的安全响应头');

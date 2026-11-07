@@ -192,10 +192,7 @@ echo '</td><td class="shareRight">'
     . '</div><div class="shareBtn">'
     . '<a class="bigBtn" href="' . wc_e(wc_url('s.php?c=' . rawurlencode($code) . '&do=down' . ($isFolder && $subFileId ? '&f=' . $subFileId : ''))) . '">'
     . ($isFolder && !$subFileId ? '打包下载 ZIP' : '下载此文件') . '</a> '
-    . '<a class="bigBtn2" href="javascript:;" data-copy-share="' . wc_e($code) . '" data-kind="' . wc_e($file ? $file['kind'] : 'folder') . '"><i class="ic ic-copy"></i> 复制直链</a> ';
-if ($file && $file['kind'] === 'image') {
-    echo '<a class="bigBtn2" href="javascript:;" data-slideshow="' . wc_e(json_encode(array(wc_url('d.php?c=' . rawurlencode($code) . '&a=inline')))) . '"><i class="ic ic-eye"></i> 幻灯查看</a> ';
-}
+    . '<a class="bigBtn2" href="javascript:;" data-copy="' . wc_e(wc_url('d.php?c=' . rawurlencode($code) . '&a=inline')) . '">复制直链</a> ';
 if ($file && in_array($file['kind'], array('image', 'video', 'audio'), true)) {
     echo '<a class="bigBtn2" href="' . wc_e(wc_url('d.php?c=' . rawurlencode($code) . '&a=inline')) . '" target="_blank">在线预览</a> ';
 }

@@ -305,3 +305,6 @@ table.featTb td b { color: #14406c; font-size: 13px; display: block; margin-bott
   .shareLeft, .shareRight { display: block; width: 100% !important; padding: 8px !important; }
   .shareVideo { width: 100%; }
 }
+
+/* 防爬蜜罐链接：视觉隐藏但保留在 DOM 中被爬虫抓取 */
+.gHp { position: absolute !important; left: -9999px !important; top: auto !important; width: 1px; height: 1px; overflow: hidden !important; }

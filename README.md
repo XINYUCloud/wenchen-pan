@@ -193,24 +193,14 @@ Copyright (C) 2026 文谶 (fohok.xin)。
 20. **封禁管理面板**（[admin/antiscan.php](admin/antiscan.php)）：近 7 天命中/封禁趋势、当前封禁列表、手动封禁/解封/转永久黑名单、IP 白名单。
 21. **精简壳页模式**：对可疑 UA 可返回不含数据的壳页；命中全部写入 `wc_log(type=guard)`。
 
-### UI 与动效（7）
-22. **mdui 2 Material Design 3 深色皮肤**：top-app-bar / navigation-drawer / layout / card / list / menu / dropdown / dialog / snackbar / fab / bottom-navigation-bar；前后台统一；后台「界面与皮肤」可切默认皮肤，访客页脚/顶栏可自行切换（cookie 覆盖），经典 2005 皮肤保留。
-23. **高斯模糊**：应用栏、抽屉、对话框面板、菜单、遮罩、幻灯片背景均 `backdrop-filter: blur()+saturate()`；滚动时应用栏模糊加深。
-24. **骨架屏**：列表/表格加载占位 shimmer 动画，数据就绪淡出；懒加载图片占位；`prefers-reduced-motion` 自动关闭动效。
-25. **MD3 主题色板**：深色/浅色/跟随系统三态，覆盖 mdui 全套 `--mdui-color-*` token。
-26. **本地 SVG 图标系统**：40+ 图标以 CSS mask 内联，不依赖 Google Fonts / 外部 CDN；mdui 本体也已本地化到 `assets/vendor/`（可切 CDN）。
-27. **全局快捷键**：`/` 搜索、`u` 上传、`g f` 文件、`g s` 分享、`c` 复制直链、`?` 帮助提示。
-28. **拖拽移动 + 复制反馈**：文件行拖到文件夹即移动；所有复制/操作结果走 snackbar 提示，破坏性操作走 mdui 确认对话框。
-
 ### 新增/改动文件
-`core/security.php`、`core/guard.php`、`export.php`、`nodelay.php`、`admin/antiscan.php`、`admin/security.php`、
-`assets/mdui-dark.css`、`assets/js/ui.js`、`assets/vendor/mdui.css|mdui.global.js`（mdui 2.1.5, MIT）；
+`core/security.php`、`core/guard.php`、`export.php`、`nodelay.php`、`admin/antiscan.php`、`admin/security.php`；
 改动 `core/template.php`、`admin/common.php`、`core/bootstrap.php`、`core/functions.php`、`core/storage.php`、`core/thumb.php`、`d.php`、`api.php`、`files.php`、`s.php`、`admin/settings.php`、`install/defaults.php`。
 
 ### 验证
-三套自动化共 **164 项断言全部通过**（基础流程 77 / 后台与 SEO 51 / 安全与防爬 36），
-另用 Chrome DevTools 实测：深色外壳、应用栏 blur(18px)、对话框 blur(24px)、骨架屏淡出、
-直链复制对话框 9 行格式、深浅主题切换、后台深色 KPI 卡片，页面零 JS 报错。
+三套自动化共 **163 项断言全部通过**（基础流程 77 / 后台与 SEO 50 / 安全与防爬 36），
+另用 Chrome DevTools 实测：登录、头像三级降级、上传器分片与秒传、后台各页面，页面零 JS 报错。
+界面固定为 2005 经典门户风（`assets/style.css`），不再包含任何 Material/mdui 资源与皮肤切换逻辑。
 
 ## 9. 常见问题
 

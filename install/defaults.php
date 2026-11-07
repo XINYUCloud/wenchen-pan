@@ -91,11 +91,6 @@ return array(
     'seo_sitemap_days' => '90',
     'seo_stats_enable' => '1',
     'seo_stats_code'   => '',
-    // 界面（mdui Material3 深色 / 经典 2005）
-    'ui_skin'          => 'mdui',
-    'ui_theme'         => 'dark',
-    'ui_cdn'           => 'local',
-    'cdn_base'         => 'https://cdn.jsdelivr.net/npm/mdui@2',
     // 安全响应头与会话
     'sec_csp'          => 'basic',
     'sec_frame'        => 'SAMEORIGIN',
