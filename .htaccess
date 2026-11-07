@@ -1,0 +1,31 @@
+# 文谶云盘 Apache 伪静态与目录保护（宝塔可直接使用）
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteBase /
+  # 外链分享页 /s/短码
+  RewriteRule ^s/([A-Za-z0-9]+)/?$ s.php?c=$1 [L,QSA]
+  # 直链下载 /d/短码
+  RewriteRule ^d/([A-Za-z0-9]+)/?$ d.php?c=$1 [L,QSA]
+  # SEO：robots.txt 与 sitemap.xml 动态生成
+  RewriteRule ^robots\.txt$ robots.php [L]
+  RewriteRule ^sitemap\.xml$ sitemap.php [L]
+  # 安装向导目录（未安装时放行）
+  RewriteCond %{REQUEST_URI} !^/install/
+  RewriteRule ^install/?$ install/index.php [L]
+</IfModule>
+
+# 敏感文件不允许直接下载
+<FilesMatch "\.(md|sql|log|lock|sh|bak|ini)$">
+  <IfModule mod_authz_core.c>
+    Require all denied
+  </IfModule>
+  <IfModule !mod_authz_core.c>
+    Order allow,deny
+    Deny from all
+  </IfModule>
+</FilesMatch>
+
+# PHP 上传相关参数请在宝塔「PHP 配置 / 上传限制」中调整，
+# 这里不写 php_value，以免 PHP-FPM 模式下报 500。

@@ -1,0 +1,32 @@
+# 本地配置与运行时数据，绝不入库
+/config/config.php
+/data/installed.lock
+/data/*
+!/data/.htaccess
+!/data/index.html
+!/data/storage/
+!/data/thumbs/
+!/data/tmp/
+!/data/logs/
+!/data/avatars/
+/data/storage/*
+!/data/storage/index.html
+!/data/storage/.htaccess
+/data/thumbs/*
+!/data/thumbs/index.html
+/data/tmp/*
+!/data/tmp/index.html
+/data/logs/*
+!/data/logs/index.html
+/data/avatars/*
+!/data/avatars/index.html
+
+# 本机联调脚手架（便携 PHP/MariaDB、测试脚本、截图）
+/.local/
+
+# 其他
+*.log
+*.sql.gz
+*.zip
+.DS_Store
+Thumbs.db

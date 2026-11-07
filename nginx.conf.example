@@ -1,0 +1,60 @@
+# 文谶云盘 Nginx（宝塔）配置示例
+# 把 server_name / root / 证书路径换成你自己的；伪静态也可单独存成 .conf 在「网站-伪静态」里引入
+
+server {
+    listen 80;
+    server_name pan.example.com;
+    root /www/wwwroot/pan.example.com;
+    index index.php index.html;
+
+    # 外链 /s/短码 与直链 /d/短码
+    location ^~ /s/ {
+        rewrite ^/s/([A-Za-z0-9]+)/?$ /s.php?c=$1 last;
+    }
+    location ^~ /d/ {
+        rewrite ^/d/([A-Za-z0-9]+)/?$ /d.php?c=$1 last;
+    }
+
+    # SEO：robots.txt 与 sitemap.xml 动态生成
+    location = /robots.txt  { rewrite ^ /robots.php  last; }
+    location = /sitemap.xml { rewrite ^ /sitemap.php last; }
+
+    # 禁止访问数据目录、核心代码目录与配置文件
+    location ^~ /data/ { deny all; }
+    location ^~ /core/  { deny all; }
+    location ^~ /config/ { deny all; }
+    location ~* /install/ {
+        # 安装完成后请删除 install 目录，或改成 deny all;
+        try_files $uri $uri/ /install/index.php?$query_string;
+    }
+    location ~* \.(md|sql|log|lock|bak)$ { deny all; }
+
+    # 上传大文件需要的请求体上限，按站点单文件上限设置
+    client_max_body_size 210m;
+
+    location ~ [^/]\.php(/|$) {
+        try_files $uri =404;
+        fastcgi_pass unix:/tmp/php-cgi-83.sock;
+        fastcgi_index index.php;
+        include fastcgi.conf;
+        # 大文件上传不要在 nginx 层缓冲，否则容易超时
+        fastcgi_request_buffering off;
+        fastcgi_read_timeout 600s;
+        client_body_timeout 600s;
+    }
+
+    location ~ .*\.(gif|jpg|jpeg|png|bmp|swf|ico|css|js)$ {
+        expires 30d;
+        access_log off;
+    }
+
+    access_log  /www/wwwlogs/pan.example.com.log;
+    error_log   /www/wwwlogs/pan.example.com.error.log;
+}
+
+# PHP 参数（php.ini 或宝塔「PHP 配置」）建议：
+#   upload_max_filesize = 210M
+#   post_max_size       = 220M
+#   max_execution_time  = 600
+#   memory_limit        = 256M
+#   session.save_path   保持默认即可（本站会话存放在 Redis / wc_kv，不用文件 session）

@@ -1,0 +1,29 @@
+@charset "utf-8";
+/* 安装向导样式 */
+body { font: 12px/1.7 "宋体", SimSun, Tahoma; background: #e9eef4; color: #222; margin: 0; padding: 20px 0; }
+.insBox { width: 760px; margin: 0 auto; border: 1px solid #b6c9de; background: #fff; }
+.insHd {
+  background: linear-gradient(#6fa8dc, #2b6bab); color: #fff; padding: 12px 16px; font-size: 20px; font-weight: bold;
+}
+.insHd span { font-size: 13px; font-weight: normal; margin-left: 8px; opacity: .9; }
+.insNav { background: #dce7f4; border-bottom: 1px solid #b6c9de; padding: 6px 16px; color: #14406c; }
+.insNav b { color: #d64f19; }
+.insTb { width: calc(100% - 32px); margin: 12px 16px; border-collapse: collapse; }
+.insTb th {
+  background: #eef4fa; color: #14406c; text-align: left; padding: 5px 8px; border: 1px solid #d2ddea; font-size: 13px;
+}
+.insTb td { border: 1px solid #d2ddea; padding: 5px 8px; }
+.insTb tr.hd td { background: #f7fafd; font-weight: bold; color: #14406c; }
+.tips { color: #7b8ea3; font-size: 11px; }
+.st_ok { color: #1c7d3f; }
+.st_warn { color: #b35c00; }
+.st_err { color: #c0392b; }
+.insErr { margin: 12px 16px 0; padding: 8px 12px; background: #fdf1f1; border: 1px solid #e6bcbc; color: #a83226; }
+.insOk { margin: 12px 16px 0; padding: 8px 12px; background: #f1f9f1; border: 1px solid #b9dfba; color: #226b2c; }
+.insFt { border-top: 1px solid #dbe5f0; background: #f7fafd; padding: 8px 16px; color: #56687d; }
+.btnBig {
+  background: linear-gradient(#fdfefe, #dfe8f2); border: 1px solid #a8bdd4; color: #14406c;
+  padding: 4px 18px; font-size: 13px; cursor: pointer;
+}
+.btnBig:hover { background: #e6f0fa; }
+input[type=text], input[type=password] { border: 1px solid #9bb6d1; padding: 2px 3px; }

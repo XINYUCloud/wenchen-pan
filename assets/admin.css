@@ -1,0 +1,61 @@
+@charset "utf-8";
+/* 文谶云盘 后台控制台皮肤 */
+body.cp { background: #dde5ee; }
+.cpTop {
+  background: #1f4e79; background: linear-gradient(#2b6bab, #1a4a75); color: #fff;
+  border-bottom: 2px solid #123a5f; padding: 8px 14px;
+}
+.cpTop b { font: bold 18px "黑体", SimHei; letter-spacing: 1px; }
+.cpTop .cpVer { color: #bcd6ee; font-size: 11px; margin-left: 8px; }
+.cpTop .cpRight { float: right; color: #dbe9f7; font-size: 11px; padding-top: 4px; }
+.cpTop .cpRight a { color: #fff; }
+.cpWrap { width: 1080px; margin: 10px auto; }
+table.cpLay { width: 100%; border-collapse: separate; }
+td.cpMenu { width: 168px; vertical-align: top; padding-right: 8px; }
+td.cpMain { vertical-align: top; }
+.menu { border: 1px solid #b6c9de; background: #fff; }
+.menuHd {
+  background: linear-gradient(#f2f7fd, #d9e6f4); border-bottom: 1px solid #b6c9de;
+  color: #14406c; font-weight: bold; padding: 4px 8px;
+}
+.menu ul { list-style: none; margin: 0; padding: 4px 0; }
+.menu li { border-bottom: 1px dotted #e2eaf3; }
+.menu li a { display: block; padding: 5px 10px; color: #1a5b9e; }
+.menu li a:hover { background: #f2f7fd; text-decoration: none; }
+.menu li a.on { background: #2b6bab; color: #fff; font-weight: bold; }
+.menu li span { display: block; padding: 4px 10px; color: #98a8ba; font-size: 11px; background: #f7fafd; }
+.cpPanel { border: 1px solid #b6c9de; background: #fff; margin-bottom: 10px; }
+.cpHd {
+  background: linear-gradient(#f2f7fd, #d9e6f4); border-bottom: 1px solid #b6c9de;
+  padding: 5px 10px; font-weight: bold; color: #14406c; font-size: 13px;
+}
+.cpHd .cpRt { float: right; font-weight: normal; font-size: 11px; }
+.cpBd { padding: 8px 10px; }
+.kpi { width: 100%; border-collapse: collapse; }
+.kpi td { border: 1px solid #dbe5f0; background: #fbfdff; text-align: center; padding: 8px 4px; width: 16.6%; }
+.kpi .n { display: block; font-size: 18px; color: #14406c; font-weight: bold; }
+.kpi .t { color: #7b8ea3; font-size: 11px; }
+.spark { width: 100%; border-collapse: collapse; margin-top: 6px; }
+.spark td { text-align: center; vertical-align: bottom; border-bottom: 1px solid #ccd8e6; height: 90px; }
+.spark i { display: block; background: linear-gradient(#8fc0ea, #2b6bab); width: 70%; margin: 0 auto; }
+.spark tr.lb td { border: 0; color: #7b8ea3; font-size: 11px; height: auto; vertical-align: top; }
+.cpTb { width: 100%; border-collapse: collapse; }
+.cpTb td, .cpTb th { border: 1px solid #dbe5f0; padding: 4px 6px; }
+.cpTb tr.hd td { background: #eef4fa; color: #14406c; font-weight: bold; white-space: nowrap; }
+.cpTb tr.r0 td { background: #fff; }
+.cpTb tr.r1 td { background: #f7fafd; }
+.cpForm th { width: 170px; text-align: right; background: #f4f8fc; color: #14406c; font-weight: normal; vertical-align: top; }
+.cpForm td .note { display: block; color: #7b8ea3; font-size: 11px; }
+.cpFilter { background: #f7fafd; border: 1px solid #dbe5f0; padding: 6px 8px; margin-bottom: 8px; }
+.cpPage { padding: 6px 2px; }
+.cpFt { width: 1080px; margin: 6px auto 24px; color: #56687d; text-align: center; }
+.danger { color: #c0392b; }
+.ok { color: #1c7d3f; }
+.badge { background: #d64f19; color: #fff; padding: 0 4px; font-size: 11px; }
+.badge2 { background: #7f8fa4; color: #fff; padding: 0 4px; font-size: 11px; }
+.txtArea { width: 96%; height: 200px; font: 12px/1.6 "Courier New", monospace; }
+.cpLogin { width: 360px; margin: 70px auto; border: 1px solid #b6c9de; background: #fff; }
+.cpLogin h2 { background: linear-gradient(#2b6bab, #1a4a75); color: #fff; margin: 0; padding: 10px 14px; font-size: 15px; }
+.cpLogin .bd { padding: 14px; }
+.cpLogin table { width: 100%; }
+.cpLogin td { padding: 5px 4px; }
