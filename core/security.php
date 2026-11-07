@@ -22,19 +22,24 @@ function sec_headers()
         if (wc_setting('sec_hide_phpver', '1')) { header_remove('Server'); }
     }
     if (wc_setting('sec_xss_protection', '1')) { header('X-XSS-Protection: 1; mode=block'); }
-    header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=(), interest-cohort=()');
+    header('Permissions-Policy: camera=(), microphone=(), geolocation=(), payment=()');
     if (COOKIE_SECURE && wc_setting('sec_hsts', '1')) {
         header('Strict-Transport-Security: max-age=' . (int)wc_setting('sec_hsts_maxage', 31536000) . '; includeSubDomains'
             . (wc_setting('sec_hsts_preload', '0') ? '; preload' : ''));
     }
     $csp = sec_csp_mode();
     if ($csp === 'off') { return; }
-    $imgSrc = "self data: blob:";
+    $imgSrc = "'self' data: blob:";
     $scriptSrc = "'self' 'unsafe-inline'";
     $styleSrc = "'self' 'unsafe-inline'";
     if (wc_setting('qr_enable', '1') && wc_setting('qr_api', '') !== '') {
         $qh = parse_url(wc_setting('qr_api'), PHP_URL_HOST);
         if ($qh) { $imgSrc .= ' https://' . $qh; }
+    }
+    // Gravatar 镜像与官方源：头像图片必须放行，否则会被 CSP 拦截后只剩字母占位
+    foreach (array('gravatar_mirror', 'gravatar_official') as $gk) {
+        $gh = parse_url(wc_setting($gk, ''), PHP_URL_HOST);
+        if ($gh) { $imgSrc .= ' https://' . $gh; }
     }
     if ($csp === 'strict') {
         $scriptSrc = "'self'";
