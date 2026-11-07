@@ -4,8 +4,10 @@
  * 用于「文件夹外链 -> 打包下载」「批量选中 -> 打包下载」
  */
 if (!defined('WC_PAN')) { exit('No direct access'); }
+if (defined('WC_CORE_ZIP')) { return; }
+define('WC_CORE_ZIP', 1);
 
-class ZipStream
+class WcZipStream
 {
     private $entries = array();
     private $offset = 0;
@@ -15,11 +17,11 @@ class ZipStream
 
     public function __construct($downloadName = 'download.zip')
     {
-        $this->limit = parse_size(setting('max_zip_size', '2 GB'));
+        $this->limit = wc_parse_size(wc_setting('max_zip_size', '2 GB'));
         while (ob_get_level() > 0) { @ob_end_clean(); }
         if (!headers_sent()) {
             header('Content-Type: application/zip');
-            header('Content-Disposition: attachment; filename="' . ASCII_fallback($downloadName) . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
+            header('Content-Disposition: attachment; filename="' . wc_ASCII_fallback($downloadName) . '"; filename*=UTF-8\'\'' . rawurlencode($downloadName));
             header('X-Content-Type-Options: nosniff');
         }
     }
@@ -111,30 +113,30 @@ class ZipStream
 }
 
 /** 递归把某用户某文件夹下的文件写入 zip */
-function zip_add_folder($zip, $uid, $fid, $prefix = '', $depth = 0)
+function wc_zip_add_folder($zip, $uid, $fid, $prefix = '', $depth = 0)
 {
     if ($depth > 8) { return 0; }
     $n = 0;
-    $files = db_rows('SELECT * FROM wc_file WHERE uid=? AND folder=? AND del_time=0 ORDER BY name', array((int)$uid, (int)$fid));
+    $files = wc_db_rows('SELECT * FROM wc_file WHERE uid=? AND folder=? AND del_time=0 ORDER BY name', array((int)$uid, (int)$fid));
     foreach ($files as $f) {
-        $abs = file_abs($f);
+        $abs = wc_file_abs($f);
         if ($abs === '') { continue; }
         if ($zip->add_file($abs, ($prefix !== '' ? $prefix . '/' : '') . $f['name'], (int)$f['add_time'])) { $n++; }
     }
-    $kids = db_rows('SELECT * FROM wc_folder WHERE uid=? AND parent=? ORDER BY name', array((int)$uid, (int)$fid));
+    $kids = wc_db_rows('SELECT * FROM wc_folder WHERE uid=? AND parent=? ORDER BY name', array((int)$uid, (int)$fid));
     foreach ($kids as $k) {
-        $n += zip_add_folder($zip, $uid, (int)$k['id'], ($prefix !== '' ? $prefix . '/' : '') . $k['name'], $depth + 1);
+        $n += wc_zip_add_folder($zip, $uid, (int)$k['id'], ($prefix !== '' ? $prefix . '/' : '') . $k['name'], $depth + 1);
     }
     return $n;
 }
 
-function zip_add_files($zip, $ids, $prefix = '')
+function wc_zip_add_files($zip, $ids, $prefix = '')
 {
     $n = 0;
-    foreach (intarr($ids) as $id) {
-        $f = db_row('SELECT * FROM wc_file WHERE id=? AND del_time=0', array($id));
+    foreach (wc_intarr($ids) as $id) {
+        $f = wc_db_row('SELECT * FROM wc_file WHERE id=? AND del_time=0', array($id));
         if (!$f) { continue; }
-        $abs = file_abs($f);
+        $abs = wc_file_abs($f);
         if ($abs === '') { continue; }
         if ($zip->add_file($abs, ($prefix !== '' ? $prefix . '/' : '') . $f['name'], (int)$f['add_time'])) { $n++; }
     }

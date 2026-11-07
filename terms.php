@@ -2,12 +2,12 @@
 /** 服务条款与隐私政策 */
 require_once __DIR__ . '/core/bootstrap.php';
 
-$custom = setting('terms_text', '');
-$site = e(setting('site_name', SITE_NAME));
+$custom = wc_setting('terms_text', '');
+$site = wc_e(wc_setting('site_name', SITE_NAME));
 
-page_head('服务条款与隐私政策');
-crumbs(array(array('首页', url()), '服务条款'));
-box_start('服务条款与隐私政策（最后更新：' . e(setting('terms_date', date('Y-m-d'))) . '）');
+wc_page_head('服务条款与隐私政策');
+wc_crumbs(array(array('首页', wc_url()), '服务条款'));
+wc_box_start('服务条款与隐私政策（最后更新：' . wc_e(wc_setting('terms_date', date('Y-m-d'))) . '）');
 
 if ($custom !== '') {
     echo '<div class="doc">' . nl2br($custom) . '</div>';
@@ -32,11 +32,11 @@ if ($custom !== '') {
         . '<p>3. 你勾选"允许出现在首页与下载排行"后，对应分享的名称、大小与昵称会在公开列表中展示。</p>'
         . '<p>4. 为配合司法机关调查，本站可提供必要的日志数据。</p>'
         . '<h3 class="docHd">五、投诉与联系</h3>'
-        . '<p>版权或违规投诉请通过 <a href="' . e(url('report.php')) . '">违规举报</a> 页面提交，并附权属证明。'
-        . '处理周期一般为 24 小时。联系邮箱：' . e(setting('report_contact', setting('mail_from', '未配置'))) . '。</p>'
+        . '<p>版权或违规投诉请通过 <a href="' . wc_e(wc_url('report.php')) . '">违规举报</a> 页面提交，并附权属证明。'
+        . '处理周期一般为 24 小时。联系邮箱：' . wc_e(wc_setting('report_contact', wc_setting('mail_from', '未配置'))) . '。</p>'
         . '</div>';
 }
-echo '<div class="hr"></div><p><a class="mybtn" href="' . e(url('register.php')) . '">我已阅读并同意，去注册</a> '
-    . '<a class="mybtn" href="' . e(url('index.php')) . '">返回首页</a></p>';
-box_end();
-page_foot();
+echo '<div class="hr"></div><p><a class="mybtn" href="' . wc_e(wc_url('register.php')) . '">我已阅读并同意，去注册</a> '
+    . '<a class="mybtn" href="' . wc_e(wc_url('index.php')) . '">返回首页</a></p>';
+wc_box_end();
+wc_page_foot();

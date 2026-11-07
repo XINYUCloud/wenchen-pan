@@ -4,8 +4,10 @@
  * 会话、验证码、限流、缓存都走这一层，业务代码不感知后端差异
  */
 if (!defined('WC_PAN')) { exit('No direct access'); }
+if (defined('WC_CORE_KV')) { return; }
+define('WC_CORE_KV', 1);
 
-class RedisLite
+class WcRedisLite
 {
     private $sock = null;
     private $err = '';
@@ -107,7 +109,7 @@ class RedisLite
 /**
  * KV 门面。redis 不可用时静默切到 MySQL，并在本次请求内固定后端。
  */
-final class KV
+final class WcKV
 {
     private static $mode = null;
     private static $redis = null;
@@ -118,7 +120,7 @@ final class KV
         if (self::$mode !== null) { return self::$mode; }
         self::$mode = 'mysql';
         if (defined('REDIS_ENABLE') && REDIS_ENABLE) {
-            $r = new RedisLite();
+            $r = new WcRedisLite();
             $ok = $r->connect(REDIS_HOST, REDIS_PORT, (float)REDIS_TIMEOUT, REDIS_PASS, (int)REDIS_DB);
             if ($ok) { self::$redis = $r; self::$mode = 'redis'; }
         }
@@ -135,7 +137,7 @@ final class KV
     {
         if (self::$purged) { return; }
         self::$purged = true;
-        try { db_exec('DELETE FROM wc_kv WHERE expire_at>0 AND expire_at<' . time()); } catch (Exception $e) {}
+        try { wc_db_exec('DELETE FROM wc_kv WHERE expire_at>0 AND expire_at<' . time()); } catch (Exception $e) {}
     }
 
     public static function get($k, $default = '')
@@ -144,7 +146,7 @@ final class KV
             $v = self::$redis->command(array('GET', $k));
             return ($v === null || $v === false) ? $default : $v;
         }
-        $row = db_row('SELECT v,expire_at FROM wc_kv WHERE k=?', array($k));
+        $row = wc_db_row('SELECT v,expire_at FROM wc_kv WHERE k=?', array($k));
         if (!$row) { return $default; }
         if ($row['expire_at'] > 0 && $row['expire_at'] < time()) { self::del($k); return $default; }
         return (string)$row['v'];
@@ -160,21 +162,21 @@ final class KV
         }
         self::purge();
         $exp = $ttl > 0 ? time() + (int)$ttl : 0;
-        db_exec('REPLACE INTO wc_kv (k,v,expire_at) VALUES (?,?,?)', array($k, $v, $exp));
+        wc_db_exec('REPLACE INTO wc_kv (k,v,expire_at) VALUES (?,?,?)', array($k, $v, $exp));
         return true;
     }
 
     public static function del($k)
     {
         if (self::backend() === 'redis') { self::$redis->command(array('DEL', $k)); return true; }
-        db_exec('DELETE FROM wc_kv WHERE k=?', array($k));
+        wc_db_exec('DELETE FROM wc_kv WHERE k=?', array($k));
         return true;
     }
 
     public static function exists($k)
     {
         if (self::backend() === 'redis') { return (int)self::r(array('EXISTS', $k)) > 0; }
-        $row = db_row('SELECT expire_at,v FROM wc_kv WHERE k=?', array($k));
+        $row = wc_db_row('SELECT expire_at,v FROM wc_kv WHERE k=?', array($k));
         if (!$row) { return false; }
         if ($row['expire_at'] > 0 && $row['expire_at'] < time()) { self::del($k); return false; }
         return true;
@@ -195,7 +197,7 @@ final class KV
     public static function ttl($k)
     {
         if (self::backend() === 'redis') { return (int)self::r(array('TTL', $k)); }
-        $row = db_row('SELECT expire_at FROM wc_kv WHERE k=?', array($k));
+        $row = wc_db_row('SELECT expire_at FROM wc_kv WHERE k=?', array($k));
         if (!$row) { return -2; }
         return $row['expire_at'] > 0 ? $row['expire_at'] - time() : -1;
     }
@@ -208,7 +210,7 @@ final class KV
         }
         $like = str_replace(array('%', '_'), array('\%', '\_'), $pattern);
         $like = str_replace('*', '%', $like);
-        return db_col('SELECT k FROM wc_kv WHERE k LIKE ? LIMIT 5000', array($like));
+        return wc_db_col('SELECT k FROM wc_kv WHERE k LIKE ? LIMIT 5000', array($like));
     }
 
     public static function flush_prefix($prefix)
@@ -223,7 +225,7 @@ final class KV
             $ok = (int)self::r(array('SET', $k, $v, 'NX', 'EX', (int)$ttl));
             return $ok === 1;
         }
-        $row = db_row('SELECT v,expire_at FROM wc_kv WHERE k=?', array($k));
+        $row = wc_db_row('SELECT v,expire_at FROM wc_kv WHERE k=?', array($k));
         if ($row && ($row['expire_at'] == 0 || $row['expire_at'] > time())) { return false; }
         self::set($k, $v, $ttl);
         return true;

@@ -1,8 +1,10 @@
 <?php
 /** 数据库访问层（PDO + 预处理） */
 if (!defined('WC_PAN')) { exit('No direct access'); }
+if (defined('WC_CORE_DB')) { return; }
+define('WC_CORE_DB', 1);
 
-function db()
+function wc_db()
 {
     static $pdo = null;
     if ($pdo === null) {
@@ -14,13 +16,13 @@ function db()
                 PDO::ATTR_EMULATE_PREPARES   => false,
             ));
         } catch (Exception $e) {
-            db_fail($e->getMessage());
+            wc_db_fail($e->getMessage());
         }
     }
     return $pdo;
 }
 
-function db_fail($msg)
+function wc_db_fail($msg)
 {
     $line = date('Y-m-d H:i:s') . ' ' . $msg . "\n";
     if (is_dir(DATA_DIR)) { @file_put_contents(DATA_DIR . '/logs/sql_error.log', $line, FILE_APPEND); }
@@ -34,69 +36,69 @@ function db_fail($msg)
     exit;
 }
 
-function db_query($sql, $args = array())
+function wc_db_query($sql, $args = array())
 {
     try {
-        $st = db()->prepare($sql);
+        $st = wc_db()->prepare($sql);
         $st->execute($args);
         return $st;
     } catch (Exception $e) {
-        db_fail($e->getMessage() . ' || ' . $sql);
+        wc_db_fail($e->getMessage() . ' || ' . $sql);
     }
 }
 
-function db_rows($sql, $args = array())
+function wc_db_rows($sql, $args = array())
 {
-    return db_query($sql, $args)->fetchAll();
+    return wc_db_query($sql, $args)->fetchAll();
 }
 
-function db_row($sql, $args = array())
+function wc_db_row($sql, $args = array())
 {
-    $r = db_query($sql, $args)->fetch();
+    $r = wc_db_query($sql, $args)->fetch();
     return $r === false ? null : $r;
 }
 
-function db_one($sql, $args = array(), $default = 0)
+function wc_db_one($sql, $args = array(), $default = 0)
 {
-    $r = db_query($sql, $args)->fetch(PDO::FETCH_NUM);
+    $r = wc_db_query($sql, $args)->fetch(PDO::FETCH_NUM);
     return ($r === false || $r[0] === null) ? $default : $r[0];
 }
 
-function db_col($sql, $args = array())
+function wc_db_col($sql, $args = array())
 {
-    return db_query($sql, $args)->fetchAll(PDO::FETCH_COLUMN);
+    return wc_db_query($sql, $args)->fetchAll(PDO::FETCH_COLUMN);
 }
 
-function db_exec($sql, $args = array())
+function wc_db_exec($sql, $args = array())
 {
-    return db_query($sql, $args)->rowCount();
+    return wc_db_query($sql, $args)->rowCount();
 }
 
-function db_insert($table, $data)
+function wc_db_insert($table, $data)
 {
     $cols = array_keys($data);
     $sql = 'INSERT INTO `' . $table . '` (`' . implode('`,`', $cols) . '`) VALUES ('
         . implode(',', array_fill(0, count($cols), '?')) . ')';
-    db_query($sql, array_values($data));
-    return (int)db()->lastInsertId();
+    wc_db_query($sql, array_values($data));
+    return (int)wc_db()->lastInsertId();
 }
 
-function db_update($table, $data, $where, $args = array())
+function wc_db_update($table, $data, $where, $args = array())
 {
     $set = array();
     $vals = array();
     foreach ($data as $k => $v) { $set[] = "`$k`=?"; $vals[] = $v; }
     $sql = 'UPDATE `' . $table . '` SET ' . implode(',', $set) . ' WHERE ' . $where;
-    return db_exec($sql, array_merge($vals, $args));
+    return wc_db_exec($sql, array_merge($vals, $args));
 }
 
-function db_count($table, $where = '1', $args = array())
+function wc_db_count($table, $where = '1', $args = array())
 {
-    return (int)db_one("SELECT COUNT(*) FROM `$table` WHERE $where", $args);
+    return (int)wc_db_one("SELECT COUNT(*) FROM `$table` WHERE $where", $args);
 }
 
 /** 只允许白名单列名参与排序，防注入 */
-function db_order($sql_order, $allow, $default)
+function wc_db_order($sql_order, $allow, $default)
 {
     $sql_order = strtolower(trim((string)$sql_order));
     return isset($allow[$sql_order]) ? $allow[$sql_order] : $default;

@@ -1,36 +1,38 @@
 <?php
 /** 公共函数库 */
 if (!defined('WC_PAN')) { exit('No direct access'); }
+if (defined('WC_CORE_FUNCTIONS')) { return; }
+define('WC_CORE_FUNCTIONS', 1);
 
 /* ---------- 输入 ---------- */
-function get($k, $d = '') { return isset($_GET[$k]) ? trim((string)$_GET[$k]) : $d; }
-function post($k, $d = '') { return isset($_POST[$k]) ? trim((string)$_POST[$k]) : $d; }
-function getint($k, $d = 0) { return isset($_GET[$k]) && $_GET[$k] !== '' ? (int)$_GET[$k] : $d; }
-function postint($k, $d = 0) { return isset($_POST[$k]) && $_POST[$k] !== '' ? (int)$_POST[$k] : $d; }
+function wc_get($k, $d = '') { return isset($_GET[$k]) ? trim((string)$_GET[$k]) : $d; }
+function wc_post($k, $d = '') { return isset($_POST[$k]) ? trim((string)$_POST[$k]) : $d; }
+function wc_getint($k, $d = 0) { return isset($_GET[$k]) && $_GET[$k] !== '' ? (int)$_GET[$k] : $d; }
+function wc_postint($k, $d = 0) { return isset($_POST[$k]) && $_POST[$k] !== '' ? (int)$_POST[$k] : $d; }
 /** 先取 POST 再取 GET 的整数（表单与链接通用） */
-function rqint($k, $d = 0)
+function wc_rqint($k, $d = 0)
 {
     if (isset($_POST[$k]) && $_POST[$k] !== '') { return (int)$_POST[$k]; }
     if (isset($_GET[$k]) && $_GET[$k] !== '') { return (int)$_GET[$k]; }
     return $d;
 }
 /** 先取 POST 再取 GET 的字符串 */
-function rqstr($k, $d = '')
+function wc_rqstr($k, $d = '')
 {
     if (isset($_POST[$k]) && trim((string)$_POST[$k]) !== '') { return trim((string)$_POST[$k]); }
     if (isset($_GET[$k]) && trim((string)$_GET[$k]) !== '') { return trim((string)$_GET[$k]); }
     return $d;
 }
-function intarr($v) { $out = array(); foreach ((array)$v as $i) { $i = (int)$i; if ($i > 0) { $out[] = $i; } } return $out; }
-function e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
-function nl2p($s) { return '<p>' . str_replace(array("\r\n", "\n"), "</p><p>", e($s)) . '</p>'; }
-function is_post() { return strtoupper(isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '') === 'POST'; }
-function is_ajax() { return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'; }
+function wc_intarr($v) { $out = array(); foreach ((array)$v as $i) { $i = (int)$i; if ($i > 0) { $out[] = $i; } } return $out; }
+function wc_e($s) { return htmlspecialchars((string)$s, ENT_QUOTES, 'UTF-8'); }
+function wc_nl2p($s) { return '<p>' . str_replace(array("\r\n", "\n"), "</p><p>", wc_e($s)) . '</p>'; }
+function wc_is_post() { return strtoupper(isset($_SERVER['REQUEST_METHOD']) ? $_SERVER['REQUEST_METHOD'] : '') === 'POST'; }
+function wc_is_ajax() { return isset($_SERVER['HTTP_X_REQUESTED_WITH']) && strtolower($_SERVER['HTTP_X_REQUESTED_WITH']) === 'xmlhttprequest'; }
 
-function ip()
+function wc_ip()
 {
     $ip = isset($_SERVER['REMOTE_ADDR']) ? $_SERVER['REMOTE_ADDR'] : '0.0.0.0';
-    $trust = setting('trust_proxy', '0');
+    $trust = wc_setting('trust_proxy', '0');
     if ($trust && !empty($_SERVER['HTTP_X_FORWARDED_FOR'])) {
         $parts = explode(',', $_SERVER['HTTP_X_FORWARDED_FOR']);
         $c = trim($parts[0]);
@@ -39,65 +41,65 @@ function ip()
     return substr($ip, 0, 45);
 }
 
-function ua($len = 250)
+function wc_ua($len = 250)
 {
     return mb_substr(substr(isset($_SERVER['HTTP_USER_AGENT']) ? $_SERVER['HTTP_USER_AGENT'] : '', 0, 400), 0, $len);
 }
 
-function url($path = '')
+function wc_url($path = '')
 {
     return SITE_URL . ltrim($path, '/');
 }
 
-function go($path)
+function wc_go($path)
 {
-    header('Location: ' . (preg_match('#^https?://#i', $path) ? $path : url($path)));
+    header('Location: ' . (preg_match('#^https?://#i', $path) ? $path : wc_url($path)));
     exit;
 }
 
 /* ---------- 站点设置 ---------- */
-function settings_all()
+function wc_settings_all()
 {
     static $cache = null;
     if ($cache !== null) { return $cache; }
     $key = 'set:all';
-    $raw = KV::get($key, '');
+    $raw = WcKV::get($key, '');
     if ($raw !== '') {
         $arr = json_decode($raw, true);
         if (is_array($arr)) { $cache = $arr; return $cache; }
     }
     $cache = array();
-    foreach (db_rows('SELECT k,v FROM wc_setting') as $r) { $cache[$r['k']] = $r['v']; }
-    KV::set($key, json_encode($cache), 120);
+    foreach (wc_db_rows('SELECT k,v FROM wc_setting') as $r) { $cache[$r['k']] = $r['v']; }
+    WcKV::set($key, json_encode($cache), 120);
     return $cache;
 }
 
-function setting($k, $d = '')
+function wc_setting($k, $d = '')
 {
     if (defined('WC_PAN')) {
-        $s = settings_all();
+        $s = wc_settings_all();
         return isset($s[$k]) && $s[$k] !== '' ? $s[$k] : $d;
     }
     return $d;
 }
 
-function setting_int($k, $d = 0) { $v = setting($k, ''); return $v === '' ? $d : (int)$v; }
-function setting_arr($k, $d = array()) { $v = setting($k, ''); if ($v === '') { return $d; } $a = json_decode($v, true); return is_array($a) ? $a : $d; }
+function wc_setting_int($k, $d = 0) { $v = wc_setting($k, ''); return $v === '' ? $d : (int)$v; }
+function wc_setting_arr($k, $d = array()) { $v = wc_setting($k, ''); if ($v === '') { return $d; } $a = json_decode($v, true); return is_array($a) ? $a : $d; }
 
-function setting_set($k, $v)
+function wc_setting_set($k, $v)
 {
-    db_exec('REPLACE INTO wc_setting (k,v) VALUES (?,?)', array($k, (string)$v));
-    KV::del('set:all');
+    wc_db_exec('REPLACE INTO wc_setting (k,v) VALUES (?,?)', array($k, (string)$v));
+    WcKV::del('set:all');
 }
 
-function settings_set($map)
+function wc_settings_set($map)
 {
-    foreach ($map as $k => $v) { db_exec('REPLACE INTO wc_setting (k,v) VALUES (?,?)', array($k, (string)$v)); }
-    KV::del('set:all');
+    foreach ($map as $k => $v) { wc_db_exec('REPLACE INTO wc_setting (k,v) VALUES (?,?)', array($k, (string)$v)); }
+    WcKV::del('set:all');
 }
 
 /* ---------- 格式化 ---------- */
-function format_size($bytes)
+function wc_format_size($bytes)
 {
     $bytes = (float)$bytes;
     $unit = array('B', 'KB', 'MB', 'GB', 'TB');
@@ -106,7 +108,7 @@ function format_size($bytes)
     return ($i == 0 ? $bytes : number_format($bytes, $bytes < 10 ? 2 : 1)) . ' ' . $unit[$i];
 }
 
-function parse_size($text)
+function wc_parse_size($text)
 {
     $text = strtoupper(trim((string)$text));
     if ($text === '') { return 0; }
@@ -119,14 +121,14 @@ function parse_size($text)
     return (int)$text;
 }
 
-function cut_str($s, $len = 40, $end = '…')
+function wc_cut_str($s, $len = 40, $end = '…')
 {
     $s = (string)$s;
     if (function_exists('mb_strimwidth')) { return mb_strimwidth($s, 0, $len * 2, $end, 'UTF-8'); }
     return strlen($s) > $len * 2 ? substr($s, 0, $len * 2) . $end : $s;
 }
 
-function human_time($ts)
+function wc_human_time($ts)
 {
     $ts = (int)$ts;
     if ($ts <= 0) { return '-'; }
@@ -139,7 +141,7 @@ function human_time($ts)
 }
 
 /* ---------- 随机串 ---------- */
-function rand_str($len = 8)
+function wc_rand_str($len = 8)
 {
     $s = '';
     $pool = 'abcdefghijkmnpqrstuvwxyz23456789';
@@ -148,7 +150,7 @@ function rand_str($len = 8)
     return $s;
 }
 
-function rand_code($len = 6)
+function wc_rand_code($len = 6)
 {
     $s = '';
     $pool = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
@@ -158,18 +160,18 @@ function rand_code($len = 6)
 }
 
 /** 生成未占用的分享短码 */
-function new_share_code($len = 6)
+function wc_new_share_code($len = 6)
 {
     for ($try = 0; $try < 8; $try++) {
-        $code = rand_str($len);
-        if (!db_row('SELECT id FROM wc_share WHERE code=?', array($code))) { return $code; }
+        $code = wc_rand_str($len);
+        if (!wc_db_row('SELECT id FROM wc_share WHERE code=?', array($code))) { return $code; }
         $len++;
     }
     return substr(sha1(uniqid('', true)), 0, 10);
 }
 
 /* ---------- 文件类型 ---------- */
-function kind_map()
+function wc_kind_map()
 {
     return array(
         'image'   => array('jpg', 'jpeg', 'png', 'gif', 'bmp', 'webp', 'svg', 'ico', 'tif', 'tiff', 'heic'),
@@ -181,59 +183,59 @@ function kind_map()
     );
 }
 
-function ext_of($name)
+function wc_ext_of($name)
 {
     $name = str_replace(array('\\', "\0"), array('/', ''), (string)$name);
     $p = pathinfo($name);
     return isset($p['extension']) ? strtolower(preg_replace('/[^a-z0-9]/i', '', $p['extension'])) : '';
 }
 
-function file_kind($ext)
+function wc_file_kind($ext)
 {
-    foreach (kind_map() as $kind => $list) {
+    foreach (wc_kind_map() as $kind => $list) {
         if (in_array($ext, $list, true)) { return $kind; }
     }
     return 'other';
 }
 
-function kind_name($kind)
+function wc_kind_name($kind)
 {
     $n = array('image' => '图片', 'video' => '视频', 'audio' => '音频', 'doc' => '文档', 'archive' => '压缩包', 'code' => '代码', 'other' => '其他');
     return isset($n[$kind]) ? $n[$kind] : $kind;
 }
 
 /** 图标字符，2005 风格用文字代替图片图标 */
-function kind_icon($kind, $ext = '')
+function wc_kind_icon($kind, $ext = '')
 {
     $m = array('image' => '图', 'video' => '影', 'audio' => '音', 'doc' => '文', 'archive' => '压', 'code' => '码', 'other' => '文');
     return isset($m[$kind]) ? $m[$kind] : '文';
 }
 
 /** 上传允许的扩展名（后台可配），并拦截绝对禁止的类型 */
-function ext_allowed($ext, &$why = '')
+function wc_ext_allowed($ext, &$why = '')
 {
     $ext = strtolower((string)$ext);
     $black = array('php', 'php3', 'php4', 'php5', 'phtml', 'phar', 'asp', 'aspx', 'jsp', 'exe', 'bat', 'cmd', 'com', 'scr', 'msi', 'dll', 'htaccess', 'sh', 'bash');
-    $force_block = setting_arr('block_ext', $black);
+    $force_block = wc_setting_arr('block_ext', $black);
     if (in_array($ext, $force_block, true)) { $why = '该扩展名属于禁止上传类型'; return false; }
-    $allow = setting_arr('allow_ext', array());
+    $allow = wc_setting_arr('allow_ext', array());
     if ($allow && !in_array($ext, $allow, true)) { $why = '不允许上传 .' . $ext . ' 类型'; return false; }
-    $types = setting_arr('allow_kinds', array('image', 'video', 'audio', 'doc', 'archive', 'code', 'other'));
-    if (!in_array(file_kind($ext), $types, true)) { $why = '不允许上传该大类文件'; return false; }
+    $types = wc_setting_arr('allow_kinds', array('image', 'video', 'audio', 'doc', 'archive', 'code', 'other'));
+    if (!in_array(wc_file_kind($ext), $types, true)) { $why = '不允许上传该大类文件'; return false; }
     return true;
 }
 
 /* ---------- 提示页 / 输出 ---------- */
-function alert($msg, $url = '', $title = '系统提示', $die = true)
+function wc_alert($msg, $url = '', $title = '系统提示', $die = true)
 {
     $t = $die ? 3 : 0;
-    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' . e($title) . '</title>'
-        . '<link rel="stylesheet" href="' . url('assets/style.css') . '"></head><body>'
-        . '<div class="tipbox"><div class="tithd">' . e($title) . '</div><div class="titbd">'
+    echo '<!DOCTYPE html><html><head><meta charset="utf-8"><title>' . wc_e($title) . '</title>'
+        . '<link rel="stylesheet" href="' . wc_url('assets/style.css') . '"></head><body>'
+        . '<div class="tipbox"><div class="tithd">' . wc_e($title) . '</div><div class="titbd">'
         . '<div class="tiMsg">' . $msg . '</div>'
-        . ($url !== '' ? '<div class="tiUrl">系统 ' . $t . ' 秒后自动跳转，如未跳转请 <a href="' . e($url) . '">点击这里</a>。</div>' : '')
+        . ($url !== '' ? '<div class="tiUrl">系统 ' . $t . ' 秒后自动跳转，如未跳转请 <a href="' . wc_e($url) . '">点击这里</a>。</div>' : '')
         . '</div><div class="tiFot">'
-        . ($url !== '' ? '<a class="mybtn" href="' . e($url) . '">确定</a> ' : '')
+        . ($url !== '' ? '<a class="mybtn" href="' . wc_e($url) . '">确定</a> ' : '')
         . '<a class="mybtn" href="javascript:history.back()">返回上一页</a></div></div></body>';
     if ($url !== '') {
         echo '<script>setTimeout(function(){location.href=' . json_encode($url) . '},3000);</script>';
@@ -242,7 +244,7 @@ function alert($msg, $url = '', $title = '系统提示', $die = true)
     if ($die) { exit; }
 }
 
-function json_out($arr, $code = 200)
+function wc_json_out($arr, $code = 200)
 {
     if (!headers_sent()) {
         http_response_code($code);
@@ -252,84 +254,66 @@ function json_out($arr, $code = 200)
     exit;
 }
 
-function json_ok($data = array()) { json_out(array_merge(array('ok' => 1), is_array($data) ? $data : array('data' => $data))); }
-function json_err($msg, $extra = array()) { json_out(array_merge(array('ok' => 0, 'msg' => $msg), $extra)); }
+function wc_json_ok($data = array()) { wc_json_out(array_merge(array('ok' => 1), is_array($data) ? $data : array('data' => $data))); }
+function wc_json_err($msg, $extra = array()) { wc_json_out(array_merge(array('ok' => 0, 'msg' => $msg), $extra)); }
 
 /* ---------- 安全 ---------- */
 /** 一次性提示（跨跳转显示） */
-function flash($msg, $type = 'ok')
+function wc_flash($msg, $type = 'ok')
 {
-    KV::set('flash:' . session_id(), json_encode(array($type, (string)$msg), JSON_UNESCAPED_UNICODE), 180);
+    WcKV::set('flash:' . session_id(), json_encode(array($type, (string)$msg), JSON_UNESCAPED_UNICODE), 180);
 }
 
-function flash_get()
+function wc_flash_get()
 {
-    $raw = (string)KV::get('flash:' . session_id(), '');
+    $raw = (string)WcKV::get('flash:' . session_id(), '');
     if ($raw === '') { return null; }
-    KV::del('flash:' . session_id());
+    WcKV::del('flash:' . session_id());
     $v = json_decode($raw, true);
     return is_array($v) ? $v : null;
 }
 
-function flash_show()
+function wc_flash_show()
 {
-    $f = flash_get();
-    if ($f) { tip($f[1], $f[0]); }
+    $f = wc_flash_get();
+    if ($f) { wc_tip($f[1], $f[0]); }
 }
 
-function csrf_token()
-{
-    if (empty($_SESSION['csrf'])) { $_SESSION['csrf'] = rand_str(16); }
-    return $_SESSION['csrf'];
-}
-
-function csrf_field()
-{
-    return '<input type="hidden" name="_token" value="' . e(csrf_token()) . '">';
-}
-
-function csrf_check($soft = false)
-{
-    $t = isset($_POST['_token']) ? $_POST['_token'] : (isset($_SERVER['HTTP_X_CSRF']) ? $_SERVER['HTTP_X_CSRF'] : '');
-    if ($t !== '' && hash_equals($_SESSION['csrf'] ?? '', $t)) { return true; }
-    if ($soft) { return false; }
-    if (is_ajax()) { json_err('页面已过期，请刷新后重试', array('code' => 'csrf')); }
-    alert('页面已过期或提交来源不正，请刷新后重新操作。', 'javascript:history.back()');
-}
+/* csrf_token / csrf_field / csrf_check 见 core/security.php（全局 + 一次性双轨） */
 
 /** 限流：$key 唯一标识，$max 次 / $ttl 秒 */
-function rate_limit($key, $max, $ttl)
+function wc_rate_limit($key, $max, $ttl)
 {
     if ($max <= 0) { return true; }
-    $n = KV::incr('limit:' . $key, $ttl);
+    $n = WcKV::incr('limit:' . $key, $ttl);
     return $n <= $max;
 }
 
-function rate_left($key, $ttl)
+function wc_rate_left($key, $ttl)
 {
-    $t = KV::ttl('limit:' . $key);
+    $t = WcKV::ttl('limit:' . $key);
     return $t > 0 ? $t : $ttl;
 }
 
-function is_email($email)
+function wc_is_email($email)
 {
     $email = strtolower(trim((string)$email));
     if (!filter_var($email, FILTER_VALIDATE_EMAIL)) { return false; }
     if (strlen($email) > 100) { return false; }
-    $black = setting_arr('mail_black_domain', array());
+    $black = wc_setting_arr('mail_black_domain', array());
     $d = substr($email, strpos($email, '@') + 1);
     if (in_array($d, $black, true)) { return false; }
     return true;
 }
 
 /** 邮箱是否允许注册（QQ/163 之类可强制校验） */
-function mail_open_reg($email)
+function wc_mail_open_reg($email)
 {
-    if (!setting('reg_mail_check', '1')) { return true; }
+    if (!wc_setting('reg_mail_check', '1')) { return true; }
     return strpos($email, '@') !== false;
 }
 
-function clean_name($name, $default = '未命名')
+function wc_clean_name($name, $default = '未命名')
 {
     $name = str_replace(array('/', '\\', "\0", "\n", "\r"), ' ', (string)$name);
     $name = preg_replace('/\s+/', ' ', $name);
@@ -339,115 +323,115 @@ function clean_name($name, $default = '未命名')
 }
 
 /* ---------- 日志 / 统计 / 站内信 ---------- */
-function log_write($type, $action, $detail = '', $uid = 0, $uname = '')
+function wc_log_write($type, $action, $detail = '', $uid = 0, $uname = '')
 {
     try {
-        db_insert('wc_log', array(
+        wc_db_insert('wc_log', array(
             'type' => substr($type, 0, 20), 'uid' => (int)$uid, 'uname' => mb_substr((string)$uname, 0, 60),
             'action' => mb_substr((string)$action, 0, 90), 'detail' => mb_substr((string)$detail, 0, 1000),
-            'ip' => ip(), 'add_time' => time(),
+            'ip' => wc_ip(), 'add_time' => time(),
         ));
     } catch (Exception $e) {
         @file_put_contents(DATA_DIR . '/logs/app.log', date('Y-m-d H:i:s') . ' ' . $e->getMessage() . "\n", FILE_APPEND);
     }
 }
 
-function stat_touch($field, $bytes = 0)
+function wc_stat_touch($field, $bytes = 0)
 {
     $today = date('Y-m-d');
-    db_exec('INSERT INTO wc_stat (d, upload_cnt, upload_bytes, down_cnt, down_bytes, new_user, share_cnt) VALUES (?,0,0,0,0,0,0) ON DUPLICATE KEY UPDATE d=d', array($today));
+    wc_db_exec('INSERT INTO wc_stat (d, upload_cnt, upload_bytes, down_cnt, down_bytes, new_user, share_cnt) VALUES (?,0,0,0,0,0,0) ON DUPLICATE KEY UPDATE d=d', array($today));
     $allow = array('upload_cnt', 'upload_bytes', 'down_cnt', 'down_bytes', 'new_user', 'share_cnt');
     if (!in_array($field, $allow, true)) { return; }
     $delta = $field === 'upload_cnt' || $field === 'down_cnt' ? 1 : max(0, (int)$bytes);
-    db_exec("UPDATE wc_stat SET `$field`=`$field`+$delta WHERE d=?", array($today));
+    wc_db_exec("UPDATE wc_stat SET `$field`=`$field`+$delta WHERE d=?", array($today));
 }
 
-function notice_add($uid, $title, $content = '', $type = 'system')
+function wc_notice_add($uid, $title, $content = '', $type = 'system')
 {
     if ((int)$uid <= 0) { return 0; }
-    return db_insert('wc_notice', array('uid' => (int)$uid, 'title' => mb_substr((string)$title, 0, 120), 'content' => (string)$content, 'type' => $type, 'is_read' => 0, 'add_time' => time()));
+    return wc_db_insert('wc_notice', array('uid' => (int)$uid, 'title' => mb_substr((string)$title, 0, 120), 'content' => (string)$content, 'type' => $type, 'is_read' => 0, 'add_time' => time()));
 }
 
-function notice_unread($uid)
+function wc_notice_unread($uid)
 {
-    return (int)db_one('SELECT COUNT(*) FROM wc_notice WHERE uid=? AND is_read=0', array((int)$uid));
+    return (int)wc_db_one('SELECT COUNT(*) FROM wc_notice WHERE uid=? AND is_read=0', array((int)$uid));
 }
 
 /* ---------- 分页 ---------- */
-function paginate($total, $page, $size, $url_tpl)
+function wc_paginate($total, $page, $size, $url_tpl)
 {
     $pages = (int)ceil($total / max(1, $size));
     if ($pages <= 1) { return ''; }
     $page = max(1, min($page, $pages));
     $html = '<div class="pagebar">共 ' . (int)$total . ' 条 ' . $page . '/' . $pages . ' 页 ';
     $from = max(1, $page - 3); $to = min($pages, $page + 3);
-    if ($page > 1) { $html .= '<a href="' . e(str_replace('{p}', $page - 1, $url_tpl)) . '">上一页</a> '; }
-    if ($from > 1) { $html .= '<a href="' . e(str_replace('{p}', 1, $url_tpl)) . '">1</a> … '; }
+    if ($page > 1) { $html .= '<a href="' . wc_e(str_replace('{p}', $page - 1, $url_tpl)) . '">上一页</a> '; }
+    if ($from > 1) { $html .= '<a href="' . wc_e(str_replace('{p}', 1, $url_tpl)) . '">1</a> … '; }
     for ($i = $from; $i <= $to; $i++) {
-        $html .= $i === $page ? '<b>[' . $i . ']</b> ' : '<a href="' . e(str_replace('{p}', $i, $url_tpl)) . '">' . $i . '</a> ';
+        $html .= $i === $page ? '<b>[' . $i . ']</b> ' : '<a href="' . wc_e(str_replace('{p}', $i, $url_tpl)) . '">' . $i . '</a> ';
     }
-    if ($to < $pages) { $html .= '… <a href="' . e(str_replace('{p}', $pages, $url_tpl)) . '">' . $pages . '</a> '; }
-    if ($page < $pages) { $html .= '<a href="' . e(str_replace('{p}', $page + 1, $url_tpl)) . '">下一页</a>'; }
+    if ($to < $pages) { $html .= '… <a href="' . wc_e(str_replace('{p}', $pages, $url_tpl)) . '">' . $pages . '</a> '; }
+    if ($page < $pages) { $html .= '<a href="' . wc_e(str_replace('{p}', $page + 1, $url_tpl)) . '">下一页</a>'; }
     return $html . '</div>';
 }
 
 /* ---------- 外链地址 ---------- */
 /** 生成 api.php 动作地址；$needKey 为 true 时附带 CSRF token（GET 类修改动作必须） */
-function api_url($do, $params = array(), $needKey = true)
+function wc_api_url($do, $params = array(), $needKey = true)
 {
     $q = array_merge(array('do' => $do), $params);
-    if ($needKey) { $q['k'] = csrf_token(); }
-    return url('api.php?' . http_build_query($q));
+    if ($needKey) { $q['k'] = wc_csrf_token(); }
+    return wc_url('api.php?' . http_build_query($q));
 }
 
 /** 缩略图/头像访问签名，避免通过自增 id 枚举他人文件 */
-function media_secret()
+function wc_media_secret()
 {
-    $sec = setting('media_secret', '');
+    $sec = wc_setting('media_secret', '');
     if ($sec === '') {
         $sec = bin2hex(random_bytes(12));
-        setting_set('media_secret', $sec);
+        wc_setting_set('media_secret', $sec);
     }
     return $sec;
 }
 
-function media_sign($kind, $id)
+function wc_media_sign($kind, $id)
 {
-    return substr(md5($kind . '|' . (int)$id . '|' . media_secret()), 0, 10);
+    return substr(md5($kind . '|' . (int)$id . '|' . wc_media_secret()), 0, 10);
 }
 
-function thumb_url($file)
+function wc_thumb_url($file)
 {
     if (empty($file['thumb'])) { return ''; }
     $id = (int)$file['id'];
-    return url('img.php?f=' . $id . '&t=' . media_sign('f', $id));
+    return wc_url('img.php?f=' . $id . '&t=' . wc_media_sign('f', $id));
 }
 
-function avatar_url($uid)
+function wc_avatar_url($uid)
 {
-    return url('img.php?avatar=' . (int)$uid . '&t=' . media_sign('a', (int)$uid));
+    return wc_url('img.php?avatar=' . (int)$uid . '&t=' . wc_media_sign('a', (int)$uid));
 }
 
-function share_page_url($code) { return url('s/' . rawurlencode($code)); }
-function share_direct_url($code) { return url('d/' . rawurlencode($code)); }
+function wc_share_page_url($code) { return wc_url('s/' . rawurlencode($code)); }
+function wc_share_direct_url($code) { return wc_url('d/' . rawurlencode($code)); }
 
 /** IP 黑名单（支持完整 IP 与 1.2.3.* 前缀） */
-function ip_blocked($ip = null)
+function wc_ip_blocked($ip = null)
 {
-    $ip = $ip === null ? ip() : $ip;
-    $list = setting_arr('ip_black', array());
+    $ip = $ip === null ? wc_ip() : $ip;
+    $list = wc_setting_arr('ip_black', array());
     if (!$list) { return false; }
     foreach ($list as $r) {
         $r = trim((string)$r);
         if ($r === '') { continue; }
         if ($r === $ip) { return true; }
         if (substr($r, -1) === '*' && strpos($ip, rtrim($r, '*')) === 0) { return true; }
-        if (strpos($r, '/') !== false && ip_in_cidr($ip, $r)) { return true; }
+        if (strpos($r, '/') !== false && wc_ip_in_cidr($ip, $r)) { return true; }
     }
     return false;
 }
 
-function ip_in_cidr($ip, $cidr)
+function wc_ip_in_cidr($ip, $cidr)
 {
     list($subnet, $bits) = explode('/', $cidr, 2);
     $ip2 = ip2long($ip); $sn = ip2long($subnet);
@@ -456,7 +440,7 @@ function ip_in_cidr($ip, $cidr)
     return ($ip2 & $mask) === ($sn & $mask);
 }
 
-function base_href()
+function wc_base_href()
 {
     $x = explode('?', isset($_SERVER['REQUEST_URI']) ? $_SERVER['REQUEST_URI'] : '');
     $p = isset($_SERVER['SCRIPT_NAME']) ? $_SERVER['SCRIPT_NAME'] : '/';
@@ -465,24 +449,24 @@ function base_href()
 
 /* ---------- Gravatar 头像 ---------- */
 /** 国内镜像是否在线（探测结果缓存；不在线时自动降级官方源） */
-function gravatar_mirror_alive($force = false)
+function wc_gravatar_mirror_alive($force = false)
 {
-    $mirror = rtrim(trim(setting('gravatar_mirror', 'https://gravatar.fohok.xin')), '/');
+    $mirror = rtrim(trim(wc_setting('gravatar_mirror', 'https://gravatar.fohok.xin')), '/');
     if ($mirror === '') { return false; }
     $key = 'grav:mirror:' . substr(md5($mirror), 0, 10);
     if (!$force) {
-        $cached = KV::get($key, '');
+        $cached = WcKV::get($key, '');
         if ($cached === '1' || $cached === '0') { return $cached === '1'; }
     }
-    $ok = http_probe($mirror . '/avatar/' . md5('probe-' . date('Ymd')) . '?s=32&d=404');
-    KV::set($key, $ok ? '1' : '0', $ok ? max(60, setting_int('gravatar_cache', 600)) : 30);
+    $ok = wc_http_probe($mirror . '/avatar/' . md5('probe-' . date('Ymd')) . '?s=32&d=404');
+    WcKV::set($key, $ok ? '1' : '0', $ok ? max(60, wc_setting_int('gravatar_cache', 600)) : 30);
     return $ok;
 }
 
 /** 只要能拿到 HTTP 响应就算在线（404 也算，因为 d=404 是预期返回） */
-function http_probe($url)
+function wc_http_probe($url)
 {
-    $timeout = max(1, setting_int('gravatar_timeout', 3));
+    $timeout = max(1, wc_setting_int('gravatar_timeout', 3));
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
         curl_setopt_array($ch, array(
@@ -503,68 +487,68 @@ function http_probe($url)
     return is_array($h) && isset($h[0]);
 }
 
-function gravatar_hash($email)
+function wc_gravatar_hash($email)
 {
     return md5(strtolower(trim((string)$email)));
 }
 
 /** 当前应使用的 Gravatar 地址（d=404：无头像时返回 404，由前端降级到字母占位） */
-function gravatar_url($email, $size = 96)
+function wc_gravatar_url($email, $size = 96)
 {
-    if (!setting('gravatar_enable', '1')) { return ''; }
-    $base = rtrim(trim(setting('gravatar_official', 'https://www.gravatar.com')), '/');
-    if (gravatar_mirror_alive()) {
-        $base = rtrim(trim(setting('gravatar_mirror', 'https://gravatar.fohok.xin')), '/');
+    if (!wc_setting('gravatar_enable', '1')) { return ''; }
+    $base = rtrim(trim(wc_setting('gravatar_official', 'https://www.gravatar.com')), '/');
+    if (wc_gravatar_mirror_alive()) {
+        $base = rtrim(trim(wc_setting('gravatar_mirror', 'https://gravatar.fohok.xin')), '/');
     }
-    return $base . '/avatar/' . gravatar_hash($email) . '?s=' . (int)$size . '&d=404';
+    return $base . '/avatar/' . wc_gravatar_hash($email) . '?s=' . (int)$size . '&d=404';
 }
 
 /** 前端 onerror 用的备用地址（始终官方源） */
-function gravatar_backup_url($email, $size = 96)
+function wc_gravatar_backup_url($email, $size = 96)
 {
-    $base = rtrim(trim(setting('gravatar_official', 'https://www.gravatar.com')), '/');
-    return $base . '/avatar/' . gravatar_hash($email) . '?s=' . (int)$size . '&d=404';
+    $base = rtrim(trim(wc_setting('gravatar_official', 'https://www.gravatar.com')), '/');
+    return $base . '/avatar/' . wc_gravatar_hash($email) . '?s=' . (int)$size . '&d=404';
 }
 
-function gravatar_backend_name()
+function wc_gravatar_backend_name()
 {
-    if (!setting('gravatar_enable', '1')) { return '已关闭'; }
-    return gravatar_mirror_alive() ? '国内镜像' : '官方源（镜像探测失败已降级）';
+    if (!wc_setting('gravatar_enable', '1')) { return '已关闭'; }
+    return wc_gravatar_mirror_alive() ? '国内镜像' : '官方源（镜像探测失败已降级）';
 }
 
 /* ---------- SEO ---------- */
-function seo_title($page = '')
+function wc_seo_title($page = '')
 {
-    $site = setting('site_name', SITE_NAME);
+    $site = wc_setting('site_name', SITE_NAME);
     if ($page === '' || $page === $site) {
-        $home = trim(setting('seo_title', ''));
+        $home = trim(wc_setting('seo_title', ''));
         return $home !== '' ? $home : $site;
     }
-    $fmt = trim(setting('seo_title_format', ''));
+    $fmt = trim(wc_setting('seo_title_format', ''));
     if ($fmt === '') { return $page . ' - ' . $site; }
     return strtr($fmt, array('{page}' => $page, '{site}' => $site));
 }
 
-function seo_robots($isSharePage = false)
+function wc_seo_robots($isSharePage = false)
 {
     if ($isSharePage) {
-        return setting('seo_index_share', '0') ? 'index,follow' : 'noindex,nofollow';
+        return wc_setting('seo_index_share', '0') ? 'index,follow' : 'noindex,nofollow';
     }
-    $v = strtolower(trim(setting('seo_robots_meta', 'index,follow')));
+    $v = strtolower(trim(wc_setting('seo_robots_meta', 'index,follow')));
     return $v === '' ? 'index,follow' : $v;
 }
 
 /** 页面描述：优先自定义，其次站点公告条 */
-function seo_description()
+function wc_seo_description()
 {
-    $d = trim(setting('seo_description', ''));
+    $d = trim(wc_setting('seo_description', ''));
     if ($d !== '') { return $d; }
-    $d = trim(setting('site_notice', ''));
-    return $d !== '' ? $d : setting('site_name', SITE_NAME) . ' 提供图片、视频、文档等多格式文件的上传与外链分享服务。';
+    $d = trim(wc_setting('site_notice', ''));
+    return $d !== '' ? $d : wc_setting('site_name', SITE_NAME) . ' 提供图片、视频、文档等多格式文件的上传与外链分享服务。';
 }
 
-function seo_stats_code()
+function wc_seo_stats_code()
 {
-    if (!setting('seo_stats_enable', '1')) { return ''; }
-    return trim((string)setting('seo_stats_code', ''));
+    if (!wc_setting('seo_stats_enable', '1')) { return ''; }
+    return trim((string)wc_setting('seo_stats_code', ''));
 }

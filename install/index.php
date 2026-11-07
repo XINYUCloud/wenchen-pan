@@ -35,8 +35,8 @@ function i_env()
     $rows[] = array('openssl', extension_loaded('openssl') ? '已安装' : '未安装', extension_loaded('openssl') ? 'ok' : 'warn', 'SMTP SSL/TLS 需要');
     $rows[] = array('redis 扩展', extension_loaded('redis') ? '已安装' : '未安装', 'ok', '可选，程序内置 Redis 客户端');
     $rows[] = array('exec 函数', function_exists('exec') ? '可用' : '被禁用', function_exists('exec') ? 'ok' : 'warn', 'ffmpeg 视频截图需要');
-    $up = parse_size_str(ini_get('upload_max_filesize'));
-    $post = parse_size_str(ini_get('post_max_size'));
+    $up = wc_parse_size_str(ini_get('upload_max_filesize'));
+    $post = wc_parse_size_str(ini_get('post_max_size'));
     $rows[] = array('upload_max_filesize', ini_get('upload_max_filesize'), $up >= 8 * 1048576 ? 'ok' : 'warn', '传统表单上传上限，建议 ≥ 64M');
     $rows[] = array('post_max_size', ini_get('post_max_size'), $post >= 8 * 1048576 ? 'ok' : 'warn', '建议 ≥ 64M');
     $rows[] = array('memory_limit', ini_get('memory_limit'), 'ok', '');
@@ -50,7 +50,7 @@ function i_env()
     return $rows;
 }
 
-function parse_size_str($v)
+function wc_parse_size_str($v)
 {
     $v = strtoupper(trim((string)$v));
     if ($v === '') { return 0; }
@@ -67,7 +67,7 @@ function parse_size_str($v)
     return (int)$n;
 }
 
-function installed_lock()
+function wc_installed_lock()
 {
     return is_file(WC_ROOT . '/config/config.php') && is_file(WC_ROOT . '/data/installed.lock');
 }
@@ -264,11 +264,11 @@ function i_install($p)
     $st = $pdo->prepare('REPLACE INTO wc_setting (k,v) VALUES (?,?)');
     foreach ($defaults as $k => $v) { $st->execute(array($k, (string)$v)); }
 
-    $mailTpls = mail_tpl_defaults();
+    $mailTpls = wc_mail_tpl_defaults();
     $mt = $pdo->prepare('REPLACE INTO wc_mail_tpl (k,name,subject,body) VALUES (?,?,?,?)');
     foreach ($mailTpls as $k => $t) { $mt->execute(array($k, $t['名称'], $t['subject'], $t['body'])); }
 
-    $quota = parse_size_str($p['quota']);
+    $quota = wc_parse_size_str($p['quota']);
     $now = time();
     $ins = $pdo->prepare('INSERT INTO wc_user (email,pass,nick,quota,used,verified,status,role,reg_ip,reg_time,last_time) VALUES (?,?,?,?,?,1,1,?,?,?,?)');
     $ins->execute(array(
@@ -308,7 +308,7 @@ function i_install($p)
 }
 
 /* ================= 入口逻辑 ================= */
-if (installed_lock() && !isset($_GET['re'])) {
+if (wc_installed_lock() && !isset($_GET['re'])) {
     header('Content-Type: text/html; charset=utf-8');
     echo '<meta charset="utf-8"><div style="font:13px SimSun;padding:40px">'
         . '<b>系统已安装。</b><br>如需重新安装，请删除 config/config.php 与 data/installed.lock 后刷新本页面。<br><br>'

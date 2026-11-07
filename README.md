@@ -163,3 +163,76 @@ Copyright (C) 2026 文谶 (fohok.xin)。
 在相同许可证下公开源代码并保留版权声明。在本仓库基础上闭源商用、去除署名或以更宽松许可证再授权均不符合 GPL-3.0 条款。
 
 使用该代码搭建的站点，其用户上传的内容、数据库数据与服务器配置不属于本许可证的覆盖范围。
+
+## 9. v1.1 迭代新增（28 项）
+
+### 直链与分享（6）
+1. **文件直链复制对话框**：文件列表/分享页一键打开，提供 分享页 / 直链 / `<img>` / `<video>` / `<audio>` / Markdown / BBCode / CSS 背景 / 缩略直链 / 视频封面 十种格式，逐行复制；图片视频优先展示。
+2. **时效签名直链**：`?e=过期时间&s=HMAC签名`，可选 1h/1d/7d/30d；篡改 403、过期 410；后台可开启「直链强制签名」。
+3. **图片参数直链**：`?w=&h=&q=&crop=1` 服务端缩放裁切并缓存（GD 可用时），缺 GD 自动回原图。
+4. **视频封面直链**：`?poster=1` 输出封面 JPG，供 `<video poster>` 与 og:image 使用。
+5. **批量直链导出**：勾选文件或整目录 → TXT / Markdown / HTML 列表 / 图片墙相册 / JSON（[export.php](export.php)）。
+6. **分享页复制 + 幻灯查看**：游客无需登录即可复制直链；图片支持全屏幻灯片（左右键翻页、背景高斯模糊）。
+
+### 安全加固（9）
+7. **全站安全响应头**：CSP（off/basic/strict 三档）、X-Frame-Options、Referrer-Policy、Permissions-Policy、nosniff、隐藏 X-Powered-By、可选 HSTS(+preload)。
+8. **CSRF 双轨**：表单一次性 token（30 分钟、用过即废）+ 会话级 token（供连续上传的 AJAX）；重放一次性 token 被拒。
+9. **会话指纹绑定**：UA 家族+IP 段（loose）或完整 UA+IP（strict），突变强制下线并写日志。
+10. **敏感操作密码重认证**：密钥轮换等需 15 分钟内验证过密码，否则弹出确认表单。
+11. **上传深度校验**：`getimagesize` 真图校验、扩展名与真实类型一致性、SVG 脚本/事件/外部引用消毒、HTML 消毒、图片边长上限。
+12. **data 目录暴露自检**：后台一键探测 `data/storage/...` 是否可被直接下载并给出结论。
+13. **密钥一键轮换**：缩略图/头像签名密钥 + 直链签名密钥 + CSRF 重置，旧签名立即失效。
+14. **登录失败指数退避可视化**：账号+IP 双维度计数，后台日志可查。
+15. **后台 IP 白名单**：支持 IP/通配/CIDR；可选「已登录管理员豁免」防自锁。
+
+### 防爬虫（6）
+16. **反爬引擎**（[core/guard.php](core/guard.php)）：UA 规则库（高危工具/采集库）、空 UA、无 Accept、每分钟频率（页面/文件/接口三档）、5 分钟页面深度、连续请求间隔节奏。
+17. **JS 挑战通行证**：可疑请求返回自动写 cookie 的验证页，纯脚本拿不到通行证；有效期可配。
+18. **蜜罐链接**：页脚隐藏链接（`/nodelay.php`），爬虫跟进即封禁。
+19. **蜘蛛白名单 + 反向 DNS**：放行真实 Google/Bing/Baidu 等；UA 声称蜘蛛但 DNS 校验失败按伪装封禁。
+20. **封禁管理面板**（[admin/antiscan.php](admin/antiscan.php)）：近 7 天命中/封禁趋势、当前封禁列表、手动封禁/解封/转永久黑名单、IP 白名单。
+21. **精简壳页模式**：对可疑 UA 可返回不含数据的壳页；命中全部写入 `wc_log(type=guard)`。
+
+### UI 与动效（7）
+22. **mdui 2 Material Design 3 深色皮肤**：top-app-bar / navigation-drawer / layout / card / list / menu / dropdown / dialog / snackbar / fab / bottom-navigation-bar；前后台统一；后台「界面与皮肤」可切默认皮肤，访客页脚/顶栏可自行切换（cookie 覆盖），经典 2005 皮肤保留。
+23. **高斯模糊**：应用栏、抽屉、对话框面板、菜单、遮罩、幻灯片背景均 `backdrop-filter: blur()+saturate()`；滚动时应用栏模糊加深。
+24. **骨架屏**：列表/表格加载占位 shimmer 动画，数据就绪淡出；懒加载图片占位；`prefers-reduced-motion` 自动关闭动效。
+25. **MD3 主题色板**：深色/浅色/跟随系统三态，覆盖 mdui 全套 `--mdui-color-*` token。
+26. **本地 SVG 图标系统**：40+ 图标以 CSS mask 内联，不依赖 Google Fonts / 外部 CDN；mdui 本体也已本地化到 `assets/vendor/`（可切 CDN）。
+27. **全局快捷键**：`/` 搜索、`u` 上传、`g f` 文件、`g s` 分享、`c` 复制直链、`?` 帮助提示。
+28. **拖拽移动 + 复制反馈**：文件行拖到文件夹即移动；所有复制/操作结果走 snackbar 提示，破坏性操作走 mdui 确认对话框。
+
+### 新增/改动文件
+`core/security.php`、`core/guard.php`、`export.php`、`nodelay.php`、`admin/antiscan.php`、`admin/security.php`、
+`assets/mdui-dark.css`、`assets/js/ui.js`、`assets/vendor/mdui.css|mdui.global.js`（mdui 2.1.5, MIT）；
+改动 `core/template.php`、`admin/common.php`、`core/bootstrap.php`、`core/functions.php`、`core/storage.php`、`core/thumb.php`、`d.php`、`api.php`、`files.php`、`s.php`、`admin/settings.php`、`install/defaults.php`。
+
+### 验证
+三套自动化共 **164 项断言全部通过**（基础流程 77 / 后台与 SEO 51 / 安全与防爬 36），
+另用 Chrome DevTools 实测：深色外壳、应用栏 blur(18px)、对话框 blur(24px)、骨架屏淡出、
+直链复制对话框 9 行格式、深浅主题切换、后台深色 KPI 卡片，页面零 JS 报错。
+
+## 9. 常见问题
+
+### 9.1 报 `Fatal error: Cannot redeclare go()` / `Cannot redeclare class KV`
+
+这是**与宿主站点或其他 PHP 程序同名冲突**导致的，常见于把本程序放在已有网站的某个子目录里（例如 `example.com/pan/`），
+而宿主站点通过 `.htaccess` 的 `auto_prepend_file`、公共 `functions.php` 或入口文件预先定义了 `go()`、`url()`、`e()`、`db()` 等通用函数；
+也可能是同一份代码被两个不同路径 `include` 了两次。
+
+当前版本已从三个层面根治，升级后不会再出现：
+
+1. **全局函数与类全部加前缀**：本程序的函数统一为 `wc_*`（如 `wc_go()`、`wc_url()`、`wc_e()`），类统一为 `Wc*`（`WcKV`、`WcZipStream`、`WcRedisLite`），
+   与宿主站点的同名函数互不影响；宿主即使先定义了 `go()`，本程序也只会调用自己的 `wc_go()`。
+2. **每个 core 文件都有 include 守卫**（`WC_CORE_*` 常量），被重复 include 时直接 `return`，不会二次声明。
+3. **`core/bootstrap.php` 有重入守卫**（`WC_BOOTED`），并且所有核心文件改用 `require_once`，不同路径引用也不会重复加载。
+
+升级方式：用新包覆盖站点里的代码文件即可，**不要覆盖** `config/config.php` 与 `data/` 目录（zip 内也不包含它们）。
+
+### 9.2 页面 500 / 白屏
+
+查看 `data/logs/php_error.log` 与宝塔的 PHP 错误日志；常见原因是 `data` 目录不可写、PHP 缺少 `pdo_mysql`/`fileinfo`，或伪静态未生效。
+
+### 9.3 收不到验证邮件
+
+后台「邮件配置」先用「仅记录模式」确认模板与变量正常，再切 SMTP 并点「测试发信」；QQ/163 需要授权码而非登录密码，465 端口必须选 SSL。

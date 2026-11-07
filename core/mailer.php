@@ -1,41 +1,43 @@
 <?php
 /** 发信：SMTP（socket + STARTTLS/SSL）为主，支持 PHP mail() 与仅记录模式 */
 if (!defined('WC_PAN')) { exit('No direct access'); }
+if (defined('WC_CORE_MAILER')) { return; }
+define('WC_CORE_MAILER', 1);
 
-function mail_config()
+function wc_mail_config()
 {
     return array(
-        'method' => setting('mail_method', 'smtp'),   // smtp | mail | log
-        'host'   => setting('mail_host', ''),
-        'port'   => (int)setting('mail_port', '465'),
-        'secure' => strtolower(setting('mail_secure', 'ssl')), // ssl | tls | none
-        'user'   => setting('mail_user', ''),
-        'pass'   => setting('mail_pass', ''),
-        'from'   => setting('mail_from', ''),
-        'fromname' => setting('mail_from_name', SITE_NAME),
-        'reply'  => setting('mail_reply', ''),
-        'timeout' => (int)setting('mail_timeout', '15'),
-        'prefix' => setting('mail_subject_prefix', ''),
+        'method' => wc_setting('mail_method', 'smtp'),   // smtp | mail | log
+        'host'   => wc_setting('mail_host', ''),
+        'port'   => (int)wc_setting('mail_port', '465'),
+        'secure' => strtolower(wc_setting('mail_secure', 'ssl')), // ssl | tls | none
+        'user'   => wc_setting('mail_user', ''),
+        'pass'   => wc_setting('mail_pass', ''),
+        'from'   => wc_setting('mail_from', ''),
+        'fromname' => wc_setting('mail_from_name', SITE_NAME),
+        'reply'  => wc_setting('mail_reply', ''),
+        'timeout' => (int)wc_setting('mail_timeout', '15'),
+        'prefix' => wc_setting('mail_subject_prefix', ''),
     );
 }
 
-function mail_last_error($msg = null)
+function wc_mail_last_error($msg = null)
 {
-    if ($msg !== null) { KV::set('mail:last_error', mb_substr((string)$msg, 0, 500), 86400); }
-    return (string)KV::get('mail:last_error', '');
+    if ($msg !== null) { WcKV::set('mail:last_error', mb_substr((string)$msg, 0, 500), 86400); }
+    return (string)WcKV::get('mail:last_error', '');
 }
 
-function mail_b64($s) { return '=?UTF-8?B?' . base64_encode((string)$s) . '?='; }
+function wc_mail_b64($s) { return '=?UTF-8?B?' . base64_encode((string)$s) . '?='; }
 
-function mail_body($subject, $html, $to, $cfg)
+function wc_mail_body($subject, $html, $to, $cfg)
 {
-    $bname = mail_b64($cfg['fromname']);
+    $bname = wc_mail_b64($cfg['fromname']);
     $from = empty($cfg['from']) ? $cfg['user'] : $cfg['from'];
     $h = array(
         'To: ' . (strpos($to, '@') !== false ? $to : $to),
         'From: ' . $bname . ' <' . $from . '>',
         'Reply-To: <' . (empty($cfg['reply']) ? $from : $cfg['reply']) . '>',
-        'Subject: ' . mail_b64(($cfg['prefix'] !== '' ? $cfg['prefix'] : '') . $subject),
+        'Subject: ' . wc_mail_b64(($cfg['prefix'] !== '' ? $cfg['prefix'] : '') . $subject),
         'Date: ' . date('r'),
         'Message-ID: <' . sha1(uniqid('', true)) . '@' . (parse_url(SITE_URL, PHP_URL_HOST) ?: 'localhost') . '>',
         'MIME-Version: 1.0',
@@ -51,9 +53,9 @@ function mail_body($subject, $html, $to, $cfg)
  * SMTP 发送（原生 socket，不依赖第三方库）
  * @return true|string
  */
-function smtp_send($to, $subject, $html)
+function wc_smtp_send($to, $subject, $html)
 {
-    $cfg = mail_config();
+    $cfg = wc_mail_config();
     if ($cfg['from'] === '' && $cfg['user'] === '') { return '未配置发件邮箱'; }
     $from = $cfg['from'] !== '' ? $cfg['from'] : $cfg['user'];
     $sock = 'tcp';
@@ -65,7 +67,7 @@ function smtp_send($to, $subject, $html)
     $meta = stream_get_meta_data($fp);
     if ($sock === 'ssl' && !$meta['crypto_type']) { fclose($fp); return 'SSL 握手失败，请改用 TLS 或 none'; }
 
-    $read = function () use ($fp) { return smtp_reply($fp); };
+    $read = function () use ($fp) { return wc_smtp_reply($fp); };
     $cmd = function ($c) use ($fp, $read) { fwrite($fp, $c . "\r\n"); return $read(); };
     $r = $read();
     if (strpos($r, '220') !== 0) { fclose($fp); return '服务器拒绝连接：' . $r; }
@@ -94,7 +96,7 @@ function smtp_send($to, $subject, $html)
     if (strpos($r, '250') !== 0 && strpos($r, '251') !== 0) { fclose($fp); return '收件地址被拒绝：' . $r; }
     $r = $cmd('DATA');
     if (strpos($r, '354') !== 0) { fclose($fp); return 'DATA 不被允许：' . $r; }
-    fwrite($fp, mail_body($subject, $html, $to, $cfg) . "\r\n.");
+    fwrite($fp, wc_mail_body($subject, $html, $to, $cfg) . "\r\n.");
     $r = $read();
     if (strpos($r, '250') !== 0) { fclose($fp); return '发信失败：' . $r; }
     $cmd('QUIT');
@@ -102,7 +104,7 @@ function smtp_send($to, $subject, $html)
     return true;
 }
 
-function smtp_reply($fp)
+function wc_smtp_reply($fp)
 {
     $out = '';
     while (($line = fgets($fp, 512)) !== false) {
@@ -116,28 +118,28 @@ function smtp_reply($fp)
  * 统一发信入口
  * @return true|string 成功返回 true，失败返回错误说明
  */
-function mail_send($to, $subject, $html)
+function wc_mail_send($to, $subject, $html)
 {
     $to = strtolower(trim((string)$to));
-    if (!is_email($to)) { return '收件邮箱无效'; }
-    $cfg = mail_config();
+    if (!wc_is_email($to)) { return '收件邮箱无效'; }
+    $cfg = wc_mail_config();
     $ok = false;
     if ($cfg['method'] === 'log') {
         $ok = true;
     } elseif ($cfg['method'] === 'mail') {
-        $ok = @mail($to, mail_b64($subject), $html, "MIME-Version: 1.0\r\nContent-type: text/html; charset=UTF-8\r\nFrom: " . $cfg['fromname'] . ' <' . ($cfg['from'] ?: $cfg['user']) . '>');
+        $ok = @mail($to, wc_mail_b64($subject), $html, "MIME-Version: 1.0\r\nContent-type: text/html; charset=UTF-8\r\nFrom: " . $cfg['fromname'] . ' <' . ($cfg['from'] ?: $cfg['user']) . '>');
     } else {
-        $r = smtp_send($to, $subject, $html);
+        $r = wc_smtp_send($to, $subject, $html);
         $ok = ($r === true);
-        if (!$ok) { mail_last_error($r); }
+        if (!$ok) { wc_mail_last_error($r); }
     }
-    mail_dump($to, $subject, $html, $ok);
-    if (!$ok && mail_last_error() === '') { mail_last_error('发信失败，请检查后台邮件配置'); }
-    return $ok ? true : mail_last_error();
+    wc_mail_dump($to, $subject, $html, $ok);
+    if (!$ok && wc_mail_last_error() === '') { wc_mail_last_error('发信失败，请检查后台邮件配置'); }
+    return $ok ? true : wc_mail_last_error();
 }
 
 /** 所有发信都落一份日志，方便排错；仅记录模式下这就是唯一的输出 */
-function mail_dump($to, $subject, $html, $ok)
+function wc_mail_dump($to, $subject, $html, $ok)
 {
     $dir = DATA_DIR . '/logs';
     if (!is_dir($dir)) { @mkdir($dir, 0750, true); }
@@ -145,18 +147,18 @@ function mail_dump($to, $subject, $html, $ok)
     @file_put_contents($dir . '/mail.log', $line, FILE_APPEND);
 }
 
-function mail_layout($title, $body)
+function wc_mail_layout($title, $body)
 {
-    $site = e(SITE_NAME);
+    $site = wc_e(SITE_NAME);
     return '<!DOCTYPE html><html><head><meta charset="utf-8"></head><body style="margin:0;padding:16px;background:#eef2f6;font:12px/1.8 SimSun,serif">'
         . '<div style="max-width:620px;margin:0 auto;border:1px solid #a8bdd4;background:#fff">'
-        . '<div style="background:#3a6ea5;color:#fff;padding:8px 14px;font-size:14px;font-weight:bold">' . $site . ' · ' . e($title) . '</div>'
+        . '<div style="background:#3a6ea5;color:#fff;padding:8px 14px;font-size:14px;font-weight:bold">' . $site . ' · ' . wc_e($title) . '</div>'
         . '<div style="padding:18px 16px;color:#333">' . $body
         . '<div style="margin-top:22px;padding-top:10px;border-top:1px dashed #ccc;color:#888">'
-        . '本邮件由 ' . $site . ' 系统自动发出，请勿直接回复。' . '<br>如非本人操作，请忽略本邮件。 <a href="' . e(SITE_URL) . '">' . $site . '</a></div></div></div></body></html>';
+        . '本邮件由 ' . $site . ' 系统自动发出，请勿直接回复。' . '<br>如非本人操作，请忽略本邮件。 <a href="' . wc_e(SITE_URL) . '">' . $site . '</a></div></div></div></body></html>';
 }
 
-function mail_tpl_vars_default($user_nick = '', $user_mail = '')
+function wc_mail_tpl_vars_default($user_nick = '', $user_mail = '')
 {
     return array(
         '{site}' => SITE_NAME,
@@ -164,32 +166,32 @@ function mail_tpl_vars_default($user_nick = '', $user_mail = '')
         '{mail}' => $user_mail,
         '{url}'  => '',
         '{time}' => '24',
-        '{ip}'   => ip(),
+        '{ip}'   => wc_ip(),
         '{date}' => date('Y-m-d H:i'),
     );
 }
 
-function mail_tpl_body($key)
+function wc_mail_tpl_body($key)
 {
-    $t = db_row('SELECT * FROM wc_mail_tpl WHERE k=?', array($key));
+    $t = wc_db_row('SELECT * FROM wc_mail_tpl WHERE k=?', array($key));
     return $t;
 }
 
 /** 按模板发信 */
-function mail_tpl($to, $name, $key, $vars = array())
+function wc_mail_tpl($to, $name, $key, $vars = array())
 {
-    $t = mail_tpl_body($key);
-    if (!$t) { return mail_send($to, SITE_NAME . ' 通知', mail_layout('通知', '模板缺失：' . e($key))); }
-    $map = mail_tpl_vars_default($name, $to);
+    $t = wc_mail_tpl_body($key);
+    if (!$t) { return wc_mail_send($to, SITE_NAME . ' 通知', wc_mail_layout('通知', '模板缺失：' . wc_e($key))); }
+    $map = wc_mail_tpl_vars_default($name, $to);
     foreach ($vars as $k => $v) { $map['{' . trim($k, '{}') . '}'] = $v; }
     $subject = strtr($t['subject'], $map);
     $body = strtr($t['body'], $map);
-    $html = mail_layout($subject, $body);
-    $r = mail_send($to, $subject, $html);
+    $html = wc_mail_layout($subject, $body);
+    $r = wc_mail_send($to, $subject, $html);
     return $r === true;
 }
 
-function mail_tpl_defaults()
+function wc_mail_tpl_defaults()
 {
     return array(
         'verify' => array('名称' => '邮箱验证', 'subject' => '请验证你的 {site} 邮箱', 'body' => '<p>你好 <b>{name}</b>：</p><p>感谢注册 <b>{site}</b>。请在 <b>{time} 小时</b>内点击下面的按钮完成邮箱验证，未验证的账号无法上传文件。</p><p><a href="{url}" style="background:#3a6ea5;color:#fff;padding:8px 18px;text-decoration:none;border:1px solid #2d5b8a">立即验证邮箱</a></p><p>如果按钮无法点击，请复制下列地址到浏览器：<br><span style="color:#06c">{url}</span></p>'),

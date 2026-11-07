@@ -2,7 +2,7 @@
 /** 图形验证码：有 GD 输出 PNG，无 GD 时退回 SVG，保证任何环境都能注册 */
 require_once __DIR__ . '/core/bootstrap.php';
 
-$word = captcha_word();
+$word = wc_captcha_word();
 header('Cache-Control: no-store, no-cache, must-revalidate');
 header('Pragma: no-cache');
 
